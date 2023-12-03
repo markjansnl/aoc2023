@@ -42,7 +42,7 @@ pub trait Day {
 
 #[macro_export]
 macro_rules! days {
-    ($($day_number:literal),* $(,)?) => {
+    ($($day_number:literal,)*) => {
         paste::paste! {
             $(
                 mod [< day $day_number >];
@@ -62,11 +62,21 @@ macro_rules! days {
                 }
             }
 
+            pub fn _day_reuse_parts(day: u8) -> anyhow::Result<bool> {
+                use $crate::Day;
+                Ok(match day {
+                    $(
+                        $day_number => < [< day $day_number >] :: [< Day $day_number >] >::reuse_parsed(),
+                    )*
+                    _ => return Err(anyhow::anyhow!(format!("Day {day} is not implemented"))),
+                })
+            }
+
             pub fn get_input(
                 day: u8,
                 index: usize,
             ) -> anyhow::Result<&'static str> {
-                use crate::Day;
+                use $crate::Day;
                 Ok(match day {
                     $(
                         $day_number => < [< day $day_number >] :: [< Day $day_number >] >::INPUTS[index],
@@ -125,14 +135,17 @@ pub fn test_example(day: u8, part: Part, example: usize, expected: String) -> Re
 
 #[macro_export]
 macro_rules! tests {
-    ($(Day $day:literal example $example:literal part $part:literal expected $expected:literal),* $(,)?) => {
+    ($(Day $day:literal example $example:literal part $part:literal expected $expected:literal,)*) => {
         paste::paste! {
-            $(
-                #[test]
-                fn [< day $day _example $example _part $part >] () -> anyhow::Result<()> {
-                    crate::test_example($day, $part.into(), $example, $expected.to_string())
-                }
-            )*
+            #[cfg(test)]
+            mod tests {
+                $(
+                    #[test]
+                    fn [< day $day _example $example _part $part >] () -> anyhow::Result<()> {
+                        $crate::test_example($day, $part.into(), $example, $expected.to_string())
+                    }
+                )*
+            }
         }
     };
 }
