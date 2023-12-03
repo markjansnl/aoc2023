@@ -6,7 +6,6 @@ use nom::{
     character::complete::{line_ending, none_of, u32},
     combinator::map,
     multi::{fold_many1, many1, separated_list1},
-    number,
 };
 
 use super::inputs::{Inputs, INPUTS};
@@ -47,13 +46,21 @@ impl Day for Day03 {
             .filter_map(SchematicEnginePart::symbol)
             .filter(|symbol| symbol.symbol == '*')
             .filter_map(|symbol| {
-                let adjecent: Vec<_> = parsed
+                let mut iter = parsed
                     .iter()
                     .filter_map(SchematicEnginePart::number)
                     .filter(|number| number.is_adjecent(symbol))
-                    .map(|number| number.number)
-                    .collect();
-                (adjecent.len() == 2).then(|| adjecent.into_iter().product::<Self::Output>())
+                    .map(|number| number.number);
+
+                if let Some(first) = iter.next() {
+                    if let Some(last) = iter.next() {
+                        if let None = iter.next() {
+                            return Some(first * last);
+                        }
+                    }
+                }
+
+                None
             })
             .sum())
     }
@@ -149,7 +156,11 @@ impl Parser {
     }
 
     fn parse_schemetic_engine_part(s: &str) -> IResult<SchematicEnginePart> {
-        alt((Parser::parse_dot, Parser::parse_number, Parser::parse_symbol))(s)
+        alt((
+            Parser::parse_dot,
+            Parser::parse_number,
+            Parser::parse_symbol,
+        ))(s)
     }
 
     fn parse_dot(s: &str) -> IResult<SchematicEnginePart> {
