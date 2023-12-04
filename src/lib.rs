@@ -42,54 +42,6 @@ pub trait Day {
     fn part2(parsed: &Self::Parsed) -> Result<Self::Output>;
 }
 
-#[macro_export]
-macro_rules! days {
-    ($($day_number:literal,)+) => {
-        paste::paste! {
-            $(
-                mod [< day $day_number >];
-            )*
-
-            pub fn run_day(
-                day: u8,
-                input: &'static str,
-                part1: bool,
-                part2: bool,
-            ) -> anyhow::Result<(Option<String>, Option<String>)> {
-                match day {
-                    $(
-                        $day_number => super::run_day_generic::< [< day $day_number >] :: [< Day $day_number >] >(input, part1, part2),
-                    )+
-                    _ => return Err(anyhow::anyhow!(format!("Day {day} is not implemented"))),
-                }
-            }
-
-            pub fn _day_reuse_parts(day: u8) -> anyhow::Result<bool> {
-                use $crate::Day;
-                Ok(match day {
-                    $(
-                        $day_number => < [< day $day_number >] :: [< Day $day_number >] >::reuse_parsed(),
-                    )+
-                    _ => return Err(anyhow::anyhow!(format!("Day {day} is not implemented"))),
-                })
-            }
-
-            pub fn get_input(
-                day: u8,
-                index: usize,
-            ) -> anyhow::Result<&'static str> {
-                use $crate::Day;
-                Ok(match day {
-                    $(
-                        $day_number => < [< day $day_number >] :: [< Day $day_number >] >::INPUTS[index],
-                    )+
-                    _ => return Err(anyhow::anyhow!(format!("Day {day} is not implemented"))),
-                })
-            }
-        }
-    };
-}
-
 pub use days::{get_input, run_day};
 
 fn run_day_generic<D: Day>(
@@ -136,9 +88,50 @@ pub fn test_example(day: u8, part: Part, example: usize, expected: String) -> Re
 }
 
 #[macro_export]
-macro_rules! tests {
+macro_rules! days {
     ($(Day $day:literal { $(example $example:literal { $(part $part:literal expected $expected:literal,)+ })+ })+) => {
         paste::paste! {
+            $(
+                mod [< day $day >];
+            )*
+
+            pub fn run_day(
+                day: u8,
+                input: &'static str,
+                part1: bool,
+                part2: bool,
+            ) -> anyhow::Result<(Option<String>, Option<String>)> {
+                match day {
+                    $(
+                        $day => super::run_day_generic::< [< day $day >] :: [< Day $day >] >(input, part1, part2),
+                    )+
+                    _ => return Err(anyhow::anyhow!(format!("Day {day} is not implemented"))),
+                }
+            }
+
+            pub fn _day_reuse_parts(day: u8) -> anyhow::Result<bool> {
+                use $crate::Day;
+                Ok(match day {
+                    $(
+                        $day => < [< day $day >] :: [< Day $day >] >::reuse_parsed(),
+                    )+
+                    _ => return Err(anyhow::anyhow!(format!("Day {day} is not implemented"))),
+                })
+            }
+
+            pub fn get_input(
+                day: u8,
+                index: usize,
+            ) -> anyhow::Result<&'static str> {
+                use $crate::Day;
+                Ok(match day {
+                    $(
+                        $day => < [< day $day >] :: [< Day $day >] >::INPUTS[index],
+                    )+
+                    _ => return Err(anyhow::anyhow!(format!("Day {day} is not implemented"))),
+                })
+            }            
+
             #[cfg(test)]
             mod tests {
                 $(

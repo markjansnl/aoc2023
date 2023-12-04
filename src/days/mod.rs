@@ -1,8 +1,6 @@
 // GENERATED! DO NOT CHANGE!
 
-crate::days![01, 03, 04,];
-
-crate::tests! {
+crate::days! {
     Day 01 {
         example 1 {
             part 1 expected "0",
