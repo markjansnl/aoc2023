@@ -5,9 +5,12 @@ use anyhow::Result;
 pub mod prelude;
 
 mod days;
+mod def;
 mod error;
 
 use Part::*;
+
+pub use days::{get_input, run_day};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Part {
@@ -41,8 +44,6 @@ pub trait Day {
     fn part1(parsed: &Self::Parsed) -> Result<Self::Output>;
     fn part2(parsed: &Self::Parsed) -> Result<Self::Output>;
 }
-
-pub use days::{get_input, run_day};
 
 fn run_day_generic<D: Day>(
     input: &'static str,
@@ -93,7 +94,30 @@ macro_rules! days {
         paste::paste! {
             $(
                 mod [< day $day >];
-            )*
+            )+
+
+            pub const DAYS: $crate::def::Days = &[
+                $(
+                    $crate::def::Day {
+                        day: $day,
+                        examples: &[
+                            $(
+                                $crate::def::Example {
+                                    example: $example,
+                                    parts:  &[
+                                        $(
+                                            $crate::def::Part {
+                                                part: $crate :: Part :: [< Part $part >],
+                                                expected: $expected,
+                                            },
+                                        )+
+                                    ],
+                                }
+                            )+
+                        ],
+                    },
+                )+
+            ];
 
             pub fn run_day(
                 day: u8,
@@ -130,7 +154,7 @@ macro_rules! days {
                     )+
                     _ => return Err(anyhow::anyhow!(format!("Day {day} is not implemented"))),
                 })
-            }            
+            }
 
             #[cfg(test)]
             mod tests {

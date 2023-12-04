@@ -1,6 +1,7 @@
 pub use crate::{
+    days::DAYS,
     error::Error,
-    Day,
+    get_input, run_day, Day,
     Part::{self, *},
     Reuse,
 };
