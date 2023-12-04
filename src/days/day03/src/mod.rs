@@ -54,7 +54,7 @@ impl Day for Day03 {
 
                 if let Some(first) = iter.next() {
                     if let Some(last) = iter.next() {
-                        if let None = iter.next() {
+                        if iter.next().is_none() {
                             return Some(first * last);
                         }
                     }
@@ -182,11 +182,4 @@ impl Parser {
             SchematicEnginePart::Symbol(Symbol { symbol, x: 0, y: 0 })
         })(s)
     }
-}
-
-#[test]
-fn part1() -> Result<()> {
-    let part1 = crate::run_day_part(3, Part2, INPUTS[0])?;
-    println!("{part1}");
-    Ok(())
 }

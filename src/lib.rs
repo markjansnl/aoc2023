@@ -1,3 +1,5 @@
+#![allow(clippy::zero_prefixed_literal)]
+
 use anyhow::Result;
 
 pub mod prelude;
