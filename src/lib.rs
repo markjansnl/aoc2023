@@ -44,7 +44,7 @@ pub trait Day {
 
 #[macro_export]
 macro_rules! days {
-    ($($day_number:literal,)*) => {
+    ($($day_number:literal,)+) => {
         paste::paste! {
             $(
                 mod [< day $day_number >];
@@ -59,7 +59,7 @@ macro_rules! days {
                 match day {
                     $(
                         $day_number => super::run_day_generic::< [< day $day_number >] :: [< Day $day_number >] >(input, part1, part2),
-                    )*
+                    )+
                     _ => return Err(anyhow::anyhow!(format!("Day {day} is not implemented"))),
                 }
             }
@@ -69,7 +69,7 @@ macro_rules! days {
                 Ok(match day {
                     $(
                         $day_number => < [< day $day_number >] :: [< Day $day_number >] >::reuse_parsed(),
-                    )*
+                    )+
                     _ => return Err(anyhow::anyhow!(format!("Day {day} is not implemented"))),
                 })
             }
@@ -82,7 +82,7 @@ macro_rules! days {
                 Ok(match day {
                     $(
                         $day_number => < [< day $day_number >] :: [< Day $day_number >] >::INPUTS[index],
-                    )*
+                    )+
                     _ => return Err(anyhow::anyhow!(format!("Day {day} is not implemented"))),
                 })
             }
@@ -137,16 +137,24 @@ pub fn test_example(day: u8, part: Part, example: usize, expected: String) -> Re
 
 #[macro_export]
 macro_rules! tests {
-    ($(Day $day:literal example $example:literal part $part:literal expected $expected:literal,)*) => {
+    ($(Day $day:literal { $(example $example:literal { $(part $part:literal expected $expected:literal,)+ })+ })+) => {
         paste::paste! {
             #[cfg(test)]
             mod tests {
                 $(
-                    #[test]
-                    fn [< day $day _example $example _part $part >] () -> anyhow::Result<()> {
-                        $crate::test_example($day, $part.into(), $example, $expected.to_string())
+                    mod [< day $day >] {
+                        $(
+                            mod [< example $example >] {
+                                $(
+                                    #[test]
+                                    fn [< part $part >] () -> anyhow::Result<()> {
+                                        $crate::test_example($day, $part.into(), $example, $expected.to_string())
+                                    }
+                                )*
+                            }
+                        )+
                     }
-                )*
+                )+
             }
         }
     };
