@@ -112,7 +112,7 @@ fn main() -> Result<()> {
             }
         }
     } else {
-        let json = serde_json::to_string(
+        let json = serde_json::to_string_pretty(
             &outputs
                 .iter()
                 .map(|(day, example, (part1, part2))| {
