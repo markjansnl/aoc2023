@@ -36,7 +36,7 @@ enum Format {
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
-    let mut outputs: Vec<(u8, usize, (Option<String>, Option<String>))> = Vec::new();
+    let mut outputs = Vec::new();
 
     let days: Vec<_> = if cli.format.is_some() {
         if cli.today {
@@ -115,7 +115,7 @@ fn main() -> Result<()> {
         let json = serde_json::to_string_pretty(
             &outputs
                 .iter()
-                .map(|(day, example, (part1, part2))| {
+                .flat_map(|(day, example, (part1, part2))| {
                     let mut vec = Vec::new();
                     if let Some(output) = part1 {
                         vec.push(JsonOutput {
@@ -135,7 +135,6 @@ fn main() -> Result<()> {
                     }
                     vec
                 })
-                .flatten()
                 .collect::<Vec<_>>(),
         )?;
 
