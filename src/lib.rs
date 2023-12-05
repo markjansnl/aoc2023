@@ -83,6 +83,7 @@ pub fn run_input(day: u8, part: Part, index: usize) -> Result<String> {
     run_day_part(day, part, get_input(day, index)?)
 }
 
+#[cfg(test)]
 pub fn test_example(day: u8, part: Part, example: usize, expected: String) -> Result<()> {
     assert_eq!(expected, run_day_part(day, part, get_input(day, example)?)?);
     Ok(())
