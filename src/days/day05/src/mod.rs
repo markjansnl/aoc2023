@@ -86,9 +86,11 @@ pub struct Map {
 #[derive(Debug)]
 pub struct Mappings<T: Debug>(Vec<(Range<T>, T)>);
 
-impl<T: Debug> FromIterator<(Range<T>, T)> for Mappings<T> {
+impl<T: Debug + Copy + Ord> FromIterator<(Range<T>, T)> for Mappings<T> {
     fn from_iter<I: IntoIterator<Item = (Range<T>, T)>>(iter: I) -> Self {
-        Mappings(Vec::from_iter(iter))
+        let mut mappings = Vec::from_iter(iter);
+        mappings.sort_by_key(|(range, _)| range.start);
+        Mappings(mappings)
     }
 }
 
@@ -109,8 +111,16 @@ impl<T: Debug + Default + Copy + Ord + Add<Output = T>> Mappings<T> {
         let mut iter = self
             .0
             .iter()
-            .filter(|(range, _)| range.end > source.start && range.start < source.end)
-            .cloned()
+            .filter_map(|(range, offset)| {
+                if range.end > source.start && range.start < source.end {
+                    Some((
+                        (range.start.max(source.start))..(range.end.min(source.end)),
+                        *offset,
+                    ))
+                } else {
+                    None
+                }
+            })
             .peekable();
 
         let mut ranges = Vec::new();
@@ -119,15 +129,9 @@ impl<T: Debug + Default + Copy + Ord + Add<Output = T>> Mappings<T> {
             if iter.peek().is_none() {
                 ranges.push((number..source.end, Default::default()));
                 number = source.end;
-            } else if let Some((mut range, offset)) = iter.next() {
+            } else if let Some((range, offset)) = iter.next() {
                 if number < range.start {
                     ranges.push((number..range.start, Default::default()));
-                }
-                if range.contains(&source.start) {
-                    range.start = source.start;
-                }
-                if range.contains(&source.end) {
-                    range.end = source.end;
                 }
                 number = range.end;
                 ranges.push((range, offset));
@@ -145,10 +149,6 @@ impl<T: Debug + Default + Copy + Ord + Add<Output = T>> Mappings<T> {
                 range
             })
             .collect::<Vec<Range<T>>>()
-    }
-
-    pub fn sort(&mut self) {
-        self.0.sort_by_key(|(range, _)| range.start);
     }
 }
 
@@ -203,17 +203,14 @@ impl Parser {
                 separated_pair(separated_pair(i64, space1, i64), space1, i64),
             ),
             |vec| {
-                let mut mappings = vec
-                    .into_iter()
+                vec.into_iter()
                     .map(|((destination_range_start, source_range_start), length)| {
                         (
                             source_range_start..source_range_start + length,
                             destination_range_start - source_range_start,
                         )
                     })
-                    .collect::<Mappings<i64>>();
-                mappings.sort();
-                mappings
+                    .collect::<Mappings<i64>>()
             },
         )(s)
     }
