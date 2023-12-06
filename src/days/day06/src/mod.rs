@@ -80,7 +80,7 @@ impl Parser {
             |(times, distances)| {
                 times
                     .into_iter()
-                    .zip(distances.into_iter())
+                    .zip(distances)
                     .map(|(time, distance)| Race { time, distance })
                     .collect()
             },
@@ -108,7 +108,7 @@ impl Parser {
 
     fn part2(s: &'static str) -> IResult<Vec<u64>> {
         map_res(is_not("\r\n"), |line: &'static str| {
-            Ok::<_, anyhow::Error>(vec![line.replace(" ", "").parse::<u64>()?])
+            Ok::<_, anyhow::Error>(vec![line.replace(' ', "").parse::<u64>()?])
         })(s)
     }
 }

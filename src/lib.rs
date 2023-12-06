@@ -10,7 +10,8 @@ mod error;
 
 use Part::*;
 
-pub use days::{get_input, run_day};
+use criterion::{black_box, Criterion};
+pub use days::{bench_day_part, bench_parse_day, get_input, reuse_parsed, run_day};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Part {
@@ -71,6 +72,19 @@ fn run_day_generic<D: Day>(
     Ok(output)
 }
 
+fn bench_day_generic<D: Day>(input: &'static str, part: Part) -> Result<()> {
+    let parsed = black_box(D::parse(input, part)?);
+    match part {
+        Part1 => {
+            D::part1(&parsed)?;
+        }
+        Part2 => {
+            D::part2(&parsed)?;
+        }
+    }
+    Ok(())
+}
+
 pub fn run_day_part(day: u8, part: Part, input: &'static str) -> Result<String> {
     let (part1_output, part2_output) = run_day(day, input, part == Part1, part == Part2)?;
     Ok(match part {
@@ -86,6 +100,37 @@ pub fn run_input(day: u8, part: Part, index: usize) -> Result<String> {
 #[cfg(test)]
 pub fn test_example(day: u8, part: Part, example: usize, expected: String) -> Result<()> {
     assert_eq!(expected, run_day_part(day, part, get_input(day, example)?)?);
+    Ok(())
+}
+
+pub fn bench_day(criterion: &mut Criterion, day: &def::Day) -> Result<()> {
+    let mut group = criterion.benchmark_group(format!("Day {}", day.day));
+    // group.sample_size(10);
+
+    if reuse_parsed(day.day)? {
+        group.bench_function("Parse", |b| {
+            b.iter(|| bench_parse_day(day.day, get_input(day.day, 0)?, Part1))
+        });
+    } else {
+        group.bench_function("Parse Part 1", |b| {
+            b.iter(|| bench_parse_day(day.day, get_input(day.day, 0)?, Part1))
+        });
+
+        group.bench_function("Parse Part 2", |b| {
+            b.iter(|| bench_parse_day(day.day, get_input(day.day, 0)?, Part2))
+        });
+    }
+
+    group.bench_function("Part 1", |b| {
+        b.iter(|| bench_day_part(day.day, get_input(day.day, 0)?, Part1))
+    });
+
+    group.bench_function("Part 2", |b| {
+        b.iter(|| bench_day_part(day.day, get_input(day.day, 0)?, Part2))
+    });
+
+    group.finish();
+
     Ok(())
 }
 
@@ -134,7 +179,7 @@ macro_rules! days {
                 }
             }
 
-            pub fn _day_reuse_parts(day: u8) -> anyhow::Result<bool> {
+            pub fn reuse_parsed(day: u8) -> anyhow::Result<bool> {
                 use $crate::Day;
                 Ok(match day {
                     $(
@@ -173,6 +218,33 @@ macro_rules! days {
                         )+
                     }
                 )+
+            }
+
+            pub fn bench_parse_day(
+                day: u8,
+                input: &'static str,
+                part: $crate::Part,
+            ) -> anyhow::Result<()> {
+                use $crate::Day;
+                match day {
+                    $(
+                        $day => { < [< day $day >] :: [< Day $day >] >::parse(input, part)?; Ok(()) },
+                    )+
+                    _ => return Err(anyhow::anyhow!(format!("Day {day} is not implemented"))),
+                }
+            }
+
+            pub fn bench_day_part(
+                day: u8,
+                input: &'static str,
+                part: $crate::Part,
+            ) -> anyhow::Result<()> {
+                match day {
+                    $(
+                        $day => super::bench_day_generic::< [< day $day >] :: [< Day $day >] >(input, part),
+                    )+
+                    _ => return Err(anyhow::anyhow!(format!("Day {day} is not implemented"))),
+                }
             }
         }
     };
