@@ -2,16 +2,16 @@
 
 use anyhow::Result;
 
-pub mod prelude;
 pub mod def;
+pub mod prelude;
 
 mod days;
 mod error;
 
 use Part::*;
 
-use criterion::black_box;
-pub use days::{bench_day_part, bench_parse_day, get_input, reuse_parsed, run_day};
+use criterion::{measurement::WallTime, BenchmarkGroup};
+pub use days::{bench_day, get_input, reuse_parsed, run_day};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Part {
@@ -72,16 +72,26 @@ fn run_day_generic<D: Day>(
     Ok(output)
 }
 
-fn bench_day_generic<D: Day>(input: &'static str, part: Part) -> Result<()> {
-    let parsed = black_box(D::parse(input, part)?);
-    match part {
-        Part1 => {
-            D::part1(&parsed)?;
-        }
-        Part2 => {
-            D::part2(&parsed)?;
-        }
+fn bench_day_generic<D: Day>(
+    input: &'static str,
+    group: &mut BenchmarkGroup<'_, WallTime>,
+) -> Result<()> {
+    // group.sample_size(10);
+
+    if D::reuse_parsed() {
+        group.bench_function("Parse", |b| b.iter(|| D::parse(input, Part1)));
+    } else {
+        group.bench_function("Parse Part 1", |b| b.iter(|| D::parse(input, Part1)));
+
+        group.bench_function("Parse Part 2", |b| b.iter(|| D::parse(input, Part2)));
     }
+
+    let parsed = D::parse(input, Part1)?;
+    group.bench_function("Part 1", |b| b.iter(|| D::part1(&parsed)));
+
+    let parsed = D::parse(input, Part2)?;
+    group.bench_function("Part 2", |b| b.iter(|| D::part2(&parsed)));
+
     Ok(())
 }
 
@@ -189,28 +199,14 @@ macro_rules! days {
                 )+
             }
 
-            pub fn bench_parse_day(
+            pub fn bench_day(
                 day: u8,
                 input: &'static str,
-                part: $crate::Part,
-            ) -> anyhow::Result<()> {
-                use $crate::Day;
-                match day {
-                    $(
-                        $day => { < [< day $day >] :: [< Day $day >] >::parse(input, part)?; Ok(()) },
-                    )+
-                    _ => return Err(anyhow::anyhow!(format!("Day {day} is not implemented"))),
-                }
-            }
-
-            pub fn bench_day_part(
-                day: u8,
-                input: &'static str,
-                part: $crate::Part,
+                group: &mut criterion::BenchmarkGroup<'_, criterion::measurement::WallTime>,
             ) -> anyhow::Result<()> {
                 match day {
                     $(
-                        $day => super::bench_day_generic::< [< day $day >] :: [< Day $day >] >(input, part),
+                        $day => super::bench_day_generic::< [< day $day >] :: [< Day $day >] >(input, group),
                     )+
                     _ => return Err(anyhow::anyhow!(format!("Day {day} is not implemented"))),
                 }
