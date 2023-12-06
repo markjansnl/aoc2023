@@ -3,14 +3,14 @@
 use anyhow::Result;
 
 pub mod prelude;
+pub mod def;
 
 mod days;
-mod def;
 mod error;
 
 use Part::*;
 
-use criterion::{black_box, Criterion};
+use criterion::black_box;
 pub use days::{bench_day_part, bench_parse_day, get_input, reuse_parsed, run_day};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -100,37 +100,6 @@ pub fn run_input(day: u8, part: Part, index: usize) -> Result<String> {
 #[cfg(test)]
 pub fn test_example(day: u8, part: Part, example: usize, expected: String) -> Result<()> {
     assert_eq!(expected, run_day_part(day, part, get_input(day, example)?)?);
-    Ok(())
-}
-
-pub fn bench_day(criterion: &mut Criterion, day: &def::Day) -> Result<()> {
-    let mut group = criterion.benchmark_group(format!("Day {}", day.day));
-    // group.sample_size(10);
-
-    if reuse_parsed(day.day)? {
-        group.bench_function("Parse", |b| {
-            b.iter(|| bench_parse_day(day.day, get_input(day.day, 0)?, Part1))
-        });
-    } else {
-        group.bench_function("Parse Part 1", |b| {
-            b.iter(|| bench_parse_day(day.day, get_input(day.day, 0)?, Part1))
-        });
-
-        group.bench_function("Parse Part 2", |b| {
-            b.iter(|| bench_parse_day(day.day, get_input(day.day, 0)?, Part2))
-        });
-    }
-
-    group.bench_function("Part 1", |b| {
-        b.iter(|| bench_day_part(day.day, get_input(day.day, 0)?, Part1))
-    });
-
-    group.bench_function("Part 2", |b| {
-        b.iter(|| bench_day_part(day.day, get_input(day.day, 0)?, Part2))
-    });
-
-    group.finish();
-
     Ok(())
 }
 
