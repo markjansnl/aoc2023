@@ -32,7 +32,7 @@ impl Day for Day08 {
     }
 
     fn part1(parsed: &Self::Parsed) -> Result<Self::Output> {
-        Ok(Self::steps(parsed, "AAA", |node| node == "ZZZ", 0))
+        Ok(Self::steps(parsed, "AAA", |node| node == "ZZZ"))
     }
 
     fn part2(parsed: &Self::Parsed) -> Result<Self::Output> {
@@ -41,12 +41,9 @@ impl Day for Day08 {
             .iter()
             .filter_map(|(start_node, _)| {
                 if start_node.chars().nth(2).unwrap() == 'A' {
-                    let start_to_end = Self::steps(
-                        parsed,
-                        start_node,
-                        |node| node.chars().nth(2).unwrap() == 'Z',
-                        0,
-                    );
+                    let start_to_end = Self::steps(parsed, start_node, |node| {
+                        node.chars().nth(2).unwrap() == 'Z'
+                    });
                     Some(start_to_end)
                 } else {
                     None
@@ -61,10 +58,9 @@ impl Day08 {
         parsed: &<Self as Day>::Parsed,
         start_node: Node,
         is_end_node: impl Fn(Node) -> bool,
-        skip: usize,
     ) -> <Self as Day>::Output {
         let map = parsed.1.iter().copied().collect::<HashMap<_, _>>();
-        let mut instructions = repeat(parsed.0.iter()).flatten().skip(skip);
+        let mut instructions = repeat(parsed.0.iter()).flatten();
         let mut current = start_node;
         let mut steps = 0;
         while !is_end_node(current) || steps == 0 {
