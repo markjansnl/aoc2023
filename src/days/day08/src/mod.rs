@@ -3,11 +3,12 @@ use std::{collections::HashMap, iter::repeat};
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{char, line_ending, multispace1, u64, alpha1},
+    character::complete::{alphanumeric1, line_ending, multispace1},
     combinator::{all_consuming, map},
     multi::{many1, separated_list1},
     sequence::{delimited, separated_pair},
 };
+use num_integer::Integer;
 
 use super::inputs::{Inputs, INPUTS};
 use crate::prelude::*;
@@ -16,7 +17,10 @@ pub struct Day08;
 impl Day for Day08 {
     const INPUTS: Self::Inputs = INPUTS;
     type Inputs = Inputs;
-    type Parsed = (Vec<Instruction>, Vec<(Node, (Node, Node))>);
+    type Parsed = (
+        Vec<Instruction>,
+        Vec<(Node<'static>, (Node<'static>, Node<'static>))>,
+    );
     type Output = usize;
 
     fn reuse_parsed() -> bool {
@@ -28,23 +32,53 @@ impl Day for Day08 {
     }
 
     fn part1(parsed: &Self::Parsed) -> Result<Self::Output> {
+        Ok(Self::steps(parsed, "AAA", |node| node == "ZZZ", 0))
+    }
+
+    fn part2(parsed: &Self::Parsed) -> Result<Self::Output> {
+        Ok(parsed
+            .1
+            .iter()
+            .filter_map(|(start_node, _)| {
+                if start_node.chars().nth(2).unwrap() == 'A' {
+                    let start_to_end = Self::steps(
+                        parsed,
+                        start_node,
+                        |node| node.chars().nth(2).unwrap() == 'Z',
+                        0,
+                    );
+                    Some(start_to_end)
+                } else {
+                    None
+                }
+            })
+            .fold(parsed.0.len(), |lcm, ghost_step| lcm.lcm(&ghost_step)))
+    }
+}
+
+impl Day08 {
+    fn steps(
+        parsed: &<Self as Day>::Parsed,
+        start_node: Node,
+        is_end_node: impl Fn(Node) -> bool,
+        skip: usize,
+    ) -> <Self as Day>::Output {
         let map = parsed.1.iter().copied().collect::<HashMap<_, _>>();
-        let mut instructions = repeat(parsed.0.iter()).flatten();
-        let mut current = "AAA";
+        let mut instructions = repeat(parsed.0.iter()).flatten().skip(skip);
+        let mut current = start_node;
         let mut steps = 0;
-        while current != "ZZZ" {
-            let map_item = map.get(current).context(format!("Node {current} is not found in the network"))?;
+        while !is_end_node(current) || steps == 0 {
+            let map_item = map
+                .get(current)
+                .context(format!("Node {current} is not found in the network"))
+                .unwrap();
             current = match instructions.next().unwrap() {
                 Instruction::Left => map_item.0,
                 Instruction::Right => map_item.1,
             };
             steps += 1;
         }
-        Ok(steps)
-    }
-
-    fn part2(parsed: &Self::Parsed) -> Result<Self::Output> {
-        Ok(todo!())
+        steps
     }
 }
 
@@ -53,7 +87,7 @@ pub enum Instruction {
     Right,
 }
 
-pub type Node = &'static str;
+pub type Node<'a> = &'a str;
 
 struct Parser;
 impl Parser {
@@ -89,6 +123,6 @@ impl Parser {
     }
 
     fn node(s: &'static str) -> IResult<Node> {
-        alpha1(s)
+        alphanumeric1(s)
     }
 }
