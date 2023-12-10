@@ -49,7 +49,8 @@ impl Day for Day09 {
             .iter()
             .map(|history| {
                 let mut history = history.clone();
-                let mut firsts = vec![history[0]];
+                let mut predicted = history[0];
+                let mut subtract = true;
                 while history.iter().any(|i| i != &0i64) {
                     let mut next_history = Vec::with_capacity(history.len() - 1);
                     history
@@ -60,10 +61,14 @@ impl Day for Day09 {
                         })
                         .unwrap_or_default();
                     history = next_history;
-                    firsts.push(history[0]);
+                    if subtract {
+                        predicted -= history[0];
+                    } else {
+                        predicted += history[0];
+                    }
+                    subtract = !subtract;
                 }
-                firsts.into_iter().rev().fold(0, |predicted, first| first - predicted)
-
+                predicted
             })
             .sum())
     }
