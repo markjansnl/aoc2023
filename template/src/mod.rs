@@ -1,9 +1,3 @@
-use nom::{
-    character::complete::{line_ending, u64},
-    combinator::all_consuming,
-    multi::separated_list1,
-};
-
 use super::inputs::{Inputs, INPUTS};
 use crate::prelude::*;
 
@@ -11,8 +5,8 @@ pub struct DayXX;
 impl Day for DayXX {
     const INPUTS: Self::Inputs = INPUTS;
     type Inputs = Inputs;
-    type Parsed = Vec<u64>;
-    type Output = u64;
+    type Parsed = todo!();
+    type Output = todo!();
 
     fn reuse_parsed() -> bool {
         true
@@ -23,17 +17,17 @@ impl Day for DayXX {
     }
 
     fn part1(parsed: &Self::Parsed) -> Result<Self::Output> {
-        Ok(todo!())
+        todo!()
     }
 
     fn part2(parsed: &Self::Parsed) -> Result<Self::Output> {
-        Ok(todo!())
+        todo!()
     }
 }
 
 struct Parser;
 impl Parser {
-    fn input(s: &str) -> IResult<Vec<u64>> {
-        all_consuming(separated_list1(line_ending, u64))(s)
+    fn input(s: &'static str) -> IResult<<DayXX as Day>::Parsed> {
+        todo!()
     }
 }
