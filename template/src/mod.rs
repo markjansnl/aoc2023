@@ -5,8 +5,8 @@ pub struct DayXX;
 impl Day for DayXX {
     const INPUTS: Self::Inputs = INPUTS;
     type Inputs = Inputs;
-    type Parsed = todo!();
-    type Output = todo!();
+    type Parsed = usize;
+    type Output = usize;
 
     fn reuse_parsed() -> bool {
         true
