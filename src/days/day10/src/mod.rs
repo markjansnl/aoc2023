@@ -1,7 +1,4 @@
-use std::{
-    fmt::{self, Debug},
-    iter::repeat,
-};
+use std::iter::repeat;
 
 use super::inputs::{Inputs, INPUTS};
 use crate::prelude::*;
@@ -37,36 +34,28 @@ impl Day for Day10 {
             })
             .collect();
 
-        Ok(Map {
-            map,
-            start,
-            double: false,
-        })
+        Ok(Map { map, start })
     }
 
     fn part1(parsed: &Self::Parsed) -> Result<Self::Output> {
         let mut map = parsed.clone();
-        let (depth, _) = Day10::bfs_loop(&mut map);
-        Ok(depth)
+        Ok(Day10::bfs_loop(&mut map))
     }
 
     fn part2(parsed: &Self::Parsed) -> Result<Self::Output> {
         let mut map = parsed.double();
-        let (_, last) = Day10::bfs_loop(&mut map);
-        map.close_loop(last);
+        Day10::bfs_loop(&mut map);
         map.flood_borders();
         Ok(map.undouble().len())
     }
 }
 
 impl Day10 {
-    fn bfs_loop(map: &mut Map) -> (i32, ((i32, i32), char)) {
+    fn bfs_loop(map: &mut Map) -> i32 {
         let mut pipes = vec![(map.start, 'S')];
         let mut depth = -1;
-        let mut last = Vec::new();
         while !pipes.is_empty() {
             depth += 1;
-            last = pipes.clone();
             pipes = pipes
                 .into_iter()
                 .fold(Vec::new(), |mut pipes, ((y, x), c)| {
@@ -109,7 +98,7 @@ impl Day10 {
                     pipes
                 });
         }
-        (depth, last[0])
+        depth
     }
 }
 
@@ -117,39 +106,29 @@ impl Day10 {
 pub struct Map {
     map: Vec<Vec<Option<char>>>,
     start: (i32, i32),
-    double: bool,
 }
 
 impl Map {
     pub fn move_left(&mut self, y: i32, x: i32, pipes: &mut Vec<((i32, i32), char)>) {
-        if self.move_checked(y, x - self.one(), pipes, "-LF") && self.double {
-            self.take(y, x - 1);
-        }
+        self.move_checked(y, x - 1, pipes, "-LF")
     }
 
     pub fn move_right(&mut self, y: i32, x: i32, pipes: &mut Vec<((i32, i32), char)>) {
-        if self.move_checked(y, x + self.one(), pipes, "-J7") && self.double {
-            self.take(y, x + 1);
-        }
+        self.move_checked(y, x + 1, pipes, "-J7")
     }
 
     pub fn move_up(&mut self, y: i32, x: i32, pipes: &mut Vec<((i32, i32), char)>) {
-        if self.move_checked(y - self.one(), x, pipes, "|7F") && self.double {
-            self.take(y - 1, x);
-        }
+        self.move_checked(y - 1, x, pipes, "|7F")
     }
 
     pub fn move_down(&mut self, y: i32, x: i32, pipes: &mut Vec<((i32, i32), char)>) {
-        if self.move_checked(y + self.one(), x, pipes, "|LJ") && self.double {
-            self.take(y + 1, x);
-        }
+        self.move_checked(y + 1, x, pipes, "|LJ")
     }
 
     pub fn double(&self) -> Map {
         let mut new_map = Map {
             map: Vec::with_capacity(self.map.len() * 2),
             start: (self.start.0 * 2, self.start.1 * 2),
-            double: true,
         };
 
         for line in &self.map {
@@ -157,48 +136,15 @@ impl Map {
             let mut new_line = Vec::with_capacity(line_len);
             for option_c in line {
                 new_line.push(*option_c);
-                new_line.push(Some('.'));
+                new_line.push(Some('-'));
             }
             new_map.map.push(new_line);
             new_map
                 .map
-                .push(Vec::from_iter(repeat(Some('.')).take(line_len)));
+                .push(Vec::from_iter(repeat(Some('|')).take(line_len)));
         }
 
         new_map
-    }
-
-    pub fn close_loop(&mut self, last: ((i32, i32), char)) {
-        let ((y, x), c) = last;
-        match c {
-            '|' => {
-                self.take(y - 1, x);
-                self.take(y + 1, x);
-            }
-            '-' => {
-                self.take(y, x - 1);
-                self.take(y, x + 1);
-            }
-            'L' => {
-                self.take(y - 1, x);
-                self.take(y, x + 1);
-            }
-            'J' => {
-                self.take(y - 1, x);
-                self.take(y, x - 1);
-            }
-            '7' => {
-                self.take(y + 1, x);
-                self.take(y, x - 1);
-            }
-            'F' => {
-                self.take(y + 1, x);
-                self.take(y, x + 1);
-            }
-            _ => {
-                panic!("Unknown last character {c}");
-            }
-        }
     }
 
     pub fn flood_borders(&mut self) {
@@ -216,7 +162,6 @@ impl Map {
         let mut new_map = Map {
             map: Vec::with_capacity(self.map.len() / 2),
             start: (self.start.0 / 2, self.start.1 / 2),
-            double: false,
         };
 
         for (_, line) in self.map.iter().enumerate().filter(|(y, _)| y % 2 == 0) {
@@ -238,14 +183,6 @@ impl Map {
             .count() as i32
     }
 
-    fn one(&self) -> i32 {
-        if self.double {
-            2
-        } else {
-            1
-        }
-    }
-
     fn flood(&mut self, y: i32, x: i32) {
         if self.take(y, x).is_some() {
             for (y, x) in [(y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)] {
@@ -254,20 +191,12 @@ impl Map {
         }
     }
 
-    fn move_checked(
-        &mut self,
-        y: i32,
-        x: i32,
-        pipes: &mut Vec<((i32, i32), char)>,
-        valid: &str,
-    ) -> bool {
+    fn move_checked(&mut self, y: i32, x: i32, pipes: &mut Vec<((i32, i32), char)>, valid: &str) {
         if let Some(c) = self.get(y, x) {
             if valid.contains(c) {
                 pipes.push(((y, x), self.take(y, x).unwrap()));
-                return true;
             }
         }
-        false
     }
 
     fn get(&mut self, y: i32, x: i32) -> Option<char> {
@@ -284,21 +213,5 @@ impl Map {
         } else {
             self.map.get_mut(y as usize)?.get_mut(x as usize)?.take()
         }
-    }
-}
-
-impl Debug for Map {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for line in &self.map {
-            for option_c in line {
-                if let Some(c) = option_c {
-                    write!(f, "{c}")?;
-                } else {
-                    write!(f, " ")?;
-                }
-            }
-            writeln!(f)?;
-        }
-        Ok(())
     }
 }
