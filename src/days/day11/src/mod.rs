@@ -11,7 +11,7 @@ impl Day for Day11 {
     type Output = usize;
 
     fn reuse_parsed() -> bool {
-        false
+        true
     }
 
     fn parse(input: &'static str, _part: Part) -> Result<Self::Parsed> {
