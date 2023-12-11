@@ -8,7 +8,7 @@ pub fn criterion_benchmark(criterion: &mut Criterion) {
 }
 
 pub fn criterion_bench_day(criterion: &mut Criterion, day: &def::Day) -> Result<()> {
-    let mut group = criterion.benchmark_group(format!("Day {}", day.day));
+    let mut group = criterion.benchmark_group(format!("Day {:02}", day.day));
 
     group.warm_up_time(std::time::Duration::from_secs(1));
 

@@ -7,42 +7,38 @@ pub struct Day11;
 impl Day for Day11 {
     const INPUTS: Self::Inputs = INPUTS;
     type Inputs = Inputs;
-    type Parsed = Image;
+    type Parsed = Vec<Galaxy>;
     type Output = usize;
 
     fn reuse_parsed() -> bool {
-        true
+        false
     }
 
     fn parse(input: &'static str, _part: Part) -> Result<Self::Parsed> {
-        Ok(Image(
-            input
-                .lines()
-                .enumerate()
-                .flat_map(|(y, line)| {
-                    line.chars().enumerate().filter_map(move |(x, c)| {
-                        if c == '#' {
-                            Some(Rc::new(RefCell::new(Galaxy([y, x]))))
-                        } else {
-                            None
-                        }
-                    })
+        Ok(input
+            .lines()
+            .enumerate()
+            .flat_map(|(y, line)| {
+                line.chars().enumerate().filter_map(move |(x, c)| {
+                    if c == '#' {
+                        Some(Galaxy([y, x]))
+                    } else {
+                        None
+                    }
                 })
-                .collect(),
-        ))
+            })
+            .collect())
     }
 
     fn part1(parsed: &Self::Parsed) -> Result<Self::Output> {
-        let image = parsed.clone();
-        image.expand(X, 2);
-        image.expand(Y, 2);
+        let image = Image::from(parsed);
+        image.expand(2);
         Ok(image.sum_lengths())
     }
 
     fn part2(parsed: &Self::Parsed) -> Result<Self::Output> {
-        let image = parsed.clone();
-        image.expand(X, 1_000_000);
-        image.expand(Y, 1_000_000);
+        let image = Image::from(parsed);
+        image.expand(1_000_000);
         Ok(image.sum_lengths())
     }
 }
@@ -50,13 +46,30 @@ impl Day for Day11 {
 #[derive(Clone)]
 pub struct Image(Vec<Rc<RefCell<Galaxy>>>);
 
+#[derive(Clone, Copy)]
 pub struct Galaxy([usize; 2]);
 
 pub const Y: usize = 0;
 pub const X: usize = 1;
 
+impl From<&Vec<Galaxy>> for Image {
+    fn from(vec: &Vec<Galaxy>) -> Self {
+        Image(
+            vec.iter()
+                .copied()
+                .map(|galaxy| Rc::new(RefCell::new(galaxy)))
+                .collect(),
+        )
+    }
+}
+
 impl Image {
-    pub fn expand(&self, key: usize, times: usize) {
+    pub fn expand(&self, times: usize) {
+        self.expand_key(X, times);
+        self.expand_key(Y, times);
+    }
+
+    pub fn expand_key(&self, key: usize, times: usize) {
         let mut sorted = self.0.clone();
         sorted.sort_by_key(|galaxy| galaxy.borrow().0[key]);
         let mut i = 0;
@@ -86,15 +99,6 @@ impl Image {
 
 impl Galaxy {
     pub fn length(&self, other: &Galaxy) -> usize {
-        let len = if self.0[X] > other.0[X] {
-            self.0[X] - other.0[X]
-        } else {
-            other.0[X] - self.0[X]
-        };
-        len + if self.0[Y] > other.0[Y] {
-            self.0[Y] - other.0[Y]
-        } else {
-            other.0[Y] - self.0[Y]
-        }
+        self.0[X].abs_diff(other.0[X]) + self.0[Y].abs_diff(other.0[Y])
     }
 }
