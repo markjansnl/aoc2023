@@ -1,6 +1,7 @@
 use std::{
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
+    ops::ControlFlow,
 };
 
 use nom::{
@@ -100,9 +101,18 @@ impl HashedPattern {
                         || left_string
                             .chars()
                             .zip(right_string.chars())
-                            .filter(|(left_char, right_char)| left_char != right_char)
-                            .count()
-                            > 1
+                            .try_fold(false, |diff_found, (left_char, right_char)| {
+                                if left_char != right_char {
+                                    if diff_found {
+                                        ControlFlow::Break(())
+                                    } else {
+                                        ControlFlow::Continue(true)
+                                    }
+                                } else {
+                                    ControlFlow::Continue(diff_found)
+                                }
+                            })
+                            .is_break()
                     {
                         false
                     } else {
