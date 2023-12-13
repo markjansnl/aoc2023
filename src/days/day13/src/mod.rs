@@ -88,27 +88,26 @@ impl HashedPattern {
         })
     }
 
-    fn find_mirror_line(hashes: &Vec<(String, u64)>, part: Part) -> Option<usize> {
-        for i in 1..hashes.len() {
+    fn find_mirror_line(lines: &Vec<(String, u64)>, part: Part) -> Option<usize> {
+        for i in 1..lines.len() {
             let mut error_found = false;
-            if hashes[0..i].iter().rev().zip(hashes[i..].iter()).all(
+            if lines[0..i].iter().rev().zip(lines[i..].iter()).all(
                 |((left_string, left_hash), (right_string, right_hash))| {
                     if left_hash == right_hash {
                         true
-                    } else if part == Part1 || error_found {
-                        false
-                    } else {
-                        let diff = left_string
+                    } else if part == Part1
+                        || error_found
+                        || left_string
                             .chars()
                             .zip(right_string.chars())
                             .filter(|(left_char, right_char)| left_char != right_char)
-                            .count();
-                        if diff > 1 {
-                            false
-                        } else {
-                            error_found = true;
-                            true
-                        }
+                            .count()
+                            > 1
+                    {
+                        false
+                    } else {
+                        error_found = true;
+                        true
                     }
                 },
             ) && (part == Part1 || error_found)
