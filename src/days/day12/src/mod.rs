@@ -64,9 +64,10 @@ impl Day12 {
             .map(|(springs, validation)| {
                 let mut dp_masks: HashMap<(String, &[usize]), Vec<String>> = HashMap::new();
                 // println!("{springs} {validation:?} START");
-                let count = Self::masks(springs, validation, &mut dp_masks).len();
+                // let count = 
+                Self::masks(springs, validation, &mut dp_masks).len()
                 // println!("{springs} {validation:?} {count}");
-                count
+                // count
             })
             .sum())
     }
