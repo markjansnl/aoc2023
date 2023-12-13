@@ -94,11 +94,11 @@ impl HashedPattern {
             let mut error_found = false;
             if lines[0..i].iter().rev().zip(lines[i..].iter()).all(
                 |((left_string, left_hash), (right_string, right_hash))| {
-                    if left_hash == right_hash {
+                    if left_hash == right_hash {  // If hashes do match: continue
                         true
-                    } else if part == Part1
-                        || error_found
-                        || left_string
+                    } else if part == Part1       // We are in part 1 and hashes did not match: stop
+                        || error_found            // If hashes did not match and we had found an error earlier: stop
+                        || left_string    // If strings are different on more than 1 character: stop
                             .chars()
                             .zip(right_string.chars())
                             .try_fold(false, |diff_found, (left_char, right_char)| {
@@ -116,8 +116,8 @@ impl HashedPattern {
                     {
                         false
                     } else {
-                        error_found = true;
-                        true
+                        error_found = true;      // If hashes did not match, but strings where different on exactly 1 character,
+                        true                     // and we didn't stop yet: register we found an error and continue
                     }
                 },
             ) && (part == Part1 || error_found)
