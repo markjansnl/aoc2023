@@ -105,7 +105,7 @@ impl Day12 {
         masks_vec
     }
 
-    fn validate(springs: &str, mask: &String) -> bool {
+    fn validate(springs: &str, mask: &str) -> bool {
         springs
             .chars()
             .zip(mask.chars())

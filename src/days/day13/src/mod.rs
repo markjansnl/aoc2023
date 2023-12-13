@@ -29,19 +29,25 @@ impl Day for Day13 {
     }
 
     fn part1(parsed: &Self::Parsed) -> Result<Self::Output> {
-        Ok(parsed.iter().map(HashedPattern::find_mirror).sum())
+        Ok(parsed
+            .iter()
+            .map(|hashed_pattern| hashed_pattern.find_mirror(Part1))
+            .sum())
     }
 
-    fn part2(_parsed: &Self::Parsed) -> Result<Self::Output> {
-        todo!()
+    fn part2(parsed: &Self::Parsed) -> Result<Self::Output> {
+        Ok(parsed
+            .iter()
+            .map(|hashed_pattern| hashed_pattern.find_mirror(Part2))
+            .sum())
     }
 }
 
 pub type Pattern = Vec<Vec<char>>;
 
 pub struct HashedPattern {
-    rows: Vec<u64>,
-    columns: Vec<u64>,
+    rows: Vec<(String, u64)>,
+    columns: Vec<(String, u64)>,
 }
 
 impl HashedPattern {
@@ -50,37 +56,62 @@ impl HashedPattern {
         let mut columns = Vec::new();
 
         for (y, line) in pattern.iter().enumerate() {
-            rows.push(DefaultHasher::new());
+            rows.push((String::new(), DefaultHasher::new()));
             for (x, c) in line.iter().enumerate() {
                 if y == 0 {
-                    columns.push(DefaultHasher::new());
+                    columns.push((String::new(), DefaultHasher::new()));
                 }
-                c.hash(&mut rows[y]);
-                c.hash(&mut columns[x]);
+                rows[y].0.push(*c);
+                columns[x].0.push(*c);
+                c.hash(&mut rows[y].1);
+                c.hash(&mut columns[x].1);
             }
         }
 
         Self {
-            rows: rows.into_iter().map(|hasher| hasher.finish()).collect(),
-            columns: columns.into_iter().map(|hasher| hasher.finish()).collect(),
+            rows: rows
+                .into_iter()
+                .map(|(s, hasher)| (s, hasher.finish()))
+                .collect(),
+            columns: columns
+                .into_iter()
+                .map(|(s, hasher)| (s, hasher.finish()))
+                .collect(),
         }
     }
 
-    pub fn find_mirror(&self) -> usize {
-        Self::find_mirror_line(&self.columns).unwrap_or_else(|| {
-            Self::find_mirror_line(&self.rows)
+    pub fn find_mirror(&self, part: Part) -> usize {
+        Self::find_mirror_line(&self.columns, part).unwrap_or_else(|| {
+            Self::find_mirror_line(&self.rows, part)
                 .map(|i| i * 100)
                 .unwrap_or_default()
         })
     }
 
-    fn find_mirror_line(hashes: &Vec<u64>) -> Option<usize> {
+    fn find_mirror_line(hashes: &Vec<(String, u64)>, part: Part) -> Option<usize> {
         for i in 1..hashes.len() {
-            if hashes[0..i]
-                .iter()
-                .rev()
-                .zip(hashes[i..].iter())
-                .all(|(left, right)| left == right)
+            let mut error_found = false;
+            if hashes[0..i].iter().rev().zip(hashes[i..].iter()).all(
+                |((left_string, left_hash), (right_string, right_hash))| {
+                    if left_hash == right_hash {
+                        true
+                    } else if part == Part1 || error_found {
+                        false
+                    } else {
+                        let diff = left_string
+                            .chars()
+                            .zip(right_string.chars())
+                            .filter(|(left_char, right_char)| left_char != right_char)
+                            .count();
+                        if diff > 1 {
+                            false
+                        } else {
+                            error_found = true;
+                            true
+                        }
+                    }
+                },
+            ) && (part == Part1 || error_found)
             {
                 return Some(i);
             }
