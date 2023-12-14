@@ -1,6 +1,6 @@
 # Advent of Code 2023
 
-In this repository you can find the source code of my solutions of the Advent of Code 2023 puzzles.
+In this repository you can find the source code of my solutions to the [Advent of Code 2023](https://adventofcode.com/2023) puzzles.
 
 Every day is implemented in a struct `DayXX`, which implements trait `Day`. A template can be found in the folder [template](template).
 
