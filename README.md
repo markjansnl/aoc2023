@@ -4,12 +4,12 @@ In this repository you can find the source code of my solutions to the [Advent o
 
 Every day is implemented in a struct `DayXX`, which implements trait `Day`. A template can be found in the folder [template](template).
 
-Configuration is done in [days.rs](src/days.rs). Macros will expand the configuration, so that te day implementations can be used in:
-* The [Command Line Interface](#command-line-interface)
+Configuration is done in [days.rs](src/days.rs). Macros will make the day implementations available for:
+* [Command Line Interface](#command-line-interface)
 * [Test Cases](#test-cases)
 * [Benchmarks](#benchmarks)
 
-Have fun looking at the source code. I had a lot of fun implementing this and I'm proud of the result.
+Have fun looking at the source code and/or give it a try with your own input. I had a lot of fun implementing this and I'm proud of the result.
 
 ## Command Line Interface
 
