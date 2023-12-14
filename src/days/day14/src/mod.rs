@@ -35,8 +35,8 @@ impl Day for Day14 {
         let mut platform = Platform::from(parsed);
         for i in 1..1_000_000_000 {
             if let Some(cycle_length) = platform.cycle(i) {
-                for j in 0..(1_000_000_000 - i) % cycle_length {
-                    platform.cycle(j);
+                for _ in 0..(1_000_000_000 - i) % cycle_length {
+                    platform.cycle(0);
                 }
                 return Ok(platform.total_load());
             }
