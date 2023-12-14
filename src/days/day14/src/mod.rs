@@ -98,7 +98,7 @@ impl From<&<Day14 as Day>::Parsed> for Platform {
     }
 }
 
-macro_rules! tilt {
+macro_rules! impl_tilt {
     ($method:ident $c1:ident $c2:ident $sort:tt) => {
         #[inline]
         pub fn $method(&mut self) {
@@ -157,10 +157,10 @@ macro_rules! next {
 }
 
 impl Platform {
-    tilt!(tilt_north x y descending );
-    tilt!(tilt_south x y ascending );
-    tilt!(tilt_east y x descending );
-    tilt!(tilt_west y x ascending );
+    impl_tilt!(tilt_north x y descending );
+    impl_tilt!(tilt_south x y ascending );
+    impl_tilt!(tilt_east y x descending );
+    impl_tilt!(tilt_west y x ascending );
 
     pub fn cycle(&mut self, i: usize) -> Option<usize> {
         self.tilt_north();
