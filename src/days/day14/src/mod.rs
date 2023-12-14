@@ -60,8 +60,7 @@ pub struct Rock {
 }
 
 pub struct Platform {
-    width: u8,
-    height: u8,
+    size: u8,
     rocks: Vec<Rock>,
     cache: HashMap<Vec<Rock>, usize>,
     cache_hits: u8,
@@ -69,8 +68,7 @@ pub struct Platform {
 
 impl From<&<Day14 as Day>::Parsed> for Platform {
     fn from(parsed: &<Day14 as Day>::Parsed) -> Self {
-        let width = parsed[0].len() as u8;
-        let height = parsed.len() as u8;
+        let size = parsed.len() as u8;
         let mut rocks = Vec::new();
 
         for (y, line) in parsed.iter().enumerate() {
@@ -78,12 +76,12 @@ impl From<&<Day14 as Day>::Parsed> for Platform {
                 match c {
                     '#' => rocks.push(Rock {
                         x: x as u8 + 1,
-                        y: height - y as u8,
+                        y: size - y as u8,
                         shape: RockShape::Square,
                     }),
                     'O' => rocks.push(Rock {
                         x: x as u8 + 1,
-                        y: height - y as u8,
+                        y: size - y as u8,
                         shape: RockShape::Round,
                     }),
                     _ => {}
@@ -92,8 +90,7 @@ impl From<&<Day14 as Day>::Parsed> for Platform {
         }
 
         Self {
-            width,
-            height,
+            size,
             rocks,
             cache: HashMap::new(),
             cache_hits: 0,
@@ -102,7 +99,7 @@ impl From<&<Day14 as Day>::Parsed> for Platform {
 }
 
 macro_rules! tilt {
-    ($method:ident $c1:ident $c2:ident $sort:tt $($reset:tt)?) => {
+    ($method:ident $c1:ident $c2:ident $sort:tt) => {
         #[inline]
         pub fn $method(&mut self) {
             self.rocks.sort_by(|a, b| {
@@ -118,7 +115,7 @@ macro_rules! tilt {
             for rock in self.rocks.iter_mut() {
                 if rock.$c1 != last_rock.$c1 {
                     last_rock.$c1 = rock.$c1;
-                    last_rock.$c2 = reset!($sort self $($reset)?);
+                    last_rock.$c2 = reset!($sort self);
                 }
                 match rock.shape {
                     RockShape::Square => {
@@ -142,8 +139,8 @@ macro_rules! reverse {
 }
 
 macro_rules! reset {
-    (ascending $self:ident $reset:tt) => {
-        $self.$reset + 1
+    (ascending $self:ident) => {
+        $self.size + 1
     };
     (descending $self:ident) => {
         0
@@ -160,9 +157,9 @@ macro_rules! next {
 }
 
 impl Platform {
-    tilt!(tilt_north x y ascending height );
+    tilt!(tilt_north x y ascending );
     tilt!(tilt_south x y descending );
-    tilt!(tilt_east y x ascending width );
+    tilt!(tilt_east y x ascending );
     tilt!(tilt_west y x descending );
 
     pub fn cycle(&mut self, i: usize) -> Option<usize> {
@@ -196,12 +193,12 @@ impl Platform {
 
 impl Debug for Platform {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for y in 0..self.height {
-            for x in 1..self.width + 1 {
+        for y in 0..self.size {
+            for x in 1..self.size + 1 {
                 if let Some(rock) = self
                     .rocks
                     .iter()
-                    .find(|rock| rock.x == x && rock.y == self.height - y)
+                    .find(|rock| rock.x == x && rock.y == self.size - y)
                 {
                     match rock.shape {
                         RockShape::Square => {
