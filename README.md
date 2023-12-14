@@ -16,14 +16,15 @@ Mark Jans
 
 ## Command Line Interface
 
-To run the [aoc2023.rs](src/bin/aoc2023.rs) Command Line Interface, call `cargo run [--release] [-- <PARAMETERS>]`. The following `<PARAMETERS>` are accepted:
-* `--format json`:          Run all days or all examples if not filtered with another parameter, and output in JSON format.
-* `--day [<DAYS>]`:         Run only days `<DAYS>`. For JSON output a comma separated list can be provided. For normal output
+To run the [aoc2023.rs](src/bin/aoc2023.rs) Command Line Interface, run `cargo run [--release] [-- <PARAMETERS>]`. The following `<PARAMETERS>` are accepted:
+* `--format json`:          Run all days or all examples if not filtered with another parameter, and output in JSON.
+* `--day [<DAYS>]`:         Run only days `<DAYS>`. For JSON output a comma separated list can be provided. For plain text output
                             only the first provided day will be run. If `<DAY>` is omitted, the current day will be run.
 * `--part <PART>`:          Run only part `<PART>`.
-* `--example [<EXAMPLES>]`  Run example inputs instead. For JSON output a comma separated list of examples can be provied. For
+* `--example [<EXAMPLES>]`: Run example inputs instead. For JSON output a comma separated list of examples can be provied. For
                             plain text input only the first provided example number will be run. If `<EXAMPLES>` is ommitted, all
                             examples will be run for JSON output, and today for plain text output.
+* `--help`:                 Show help and available parameters.
 
 ## Test Cases
 
