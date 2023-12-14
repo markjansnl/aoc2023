@@ -132,9 +132,9 @@ macro_rules! impl_tilt {
 }
 
 macro_rules! reverse {
-    (ascending $x:ident) => {};
-    (descending $x:ident) => {
-        $x = $x.reverse();
+    (ascending $cmp:ident) => {};
+    (descending $cmp:ident) => {
+        $cmp = $cmp.reverse();
     };
 }
 
