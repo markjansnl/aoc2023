@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Debug};
+use std::collections::HashMap;
 
 use nom::{
     branch::alt,
@@ -132,35 +132,35 @@ macro_rules! tilt {
 }
 
 macro_rules! reverse {
-    (ascending $x:ident) => {
+    (ascending $x:ident) => {};
+    (descending $x:ident) => {
         $x = $x.reverse();
     };
-    (descending $x:ident) => {};
 }
 
 macro_rules! reset {
     (ascending $self:ident) => {
-        $self.size + 1
+        0
     };
     (descending $self:ident) => {
-        0
+        $self.size + 1
     };
 }
 
 macro_rules! next {
     (ascending $last_rock:ident $c:ident) => {
-        $last_rock.$c -= 1;
+        $last_rock.$c += 1;
     };
     (descending $last_rock:ident $c:ident) => {
-        $last_rock.$c += 1;
+        $last_rock.$c -= 1;
     };
 }
 
 impl Platform {
-    tilt!(tilt_north x y ascending );
-    tilt!(tilt_south x y descending );
-    tilt!(tilt_east y x ascending );
-    tilt!(tilt_west y x descending );
+    tilt!(tilt_north x y descending );
+    tilt!(tilt_south x y ascending );
+    tilt!(tilt_east y x descending );
+    tilt!(tilt_west y x ascending );
 
     pub fn cycle(&mut self, i: usize) -> Option<usize> {
         self.tilt_north();
@@ -191,7 +191,8 @@ impl Platform {
     }
 }
 
-impl Debug for Platform {
+#[cfg(test)]
+impl std::fmt::Debug for Platform {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for y in 0..self.size {
             for x in 1..self.size + 1 {
