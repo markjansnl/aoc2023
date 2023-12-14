@@ -169,8 +169,8 @@ impl Platform {
         self.tilt_east();
 
         if let Some(prev) = self.cache.get(&self.rocks).copied() {
-            self.cache_hits += 1;
             self.cache.clear();
+            self.cache_hits += 1;
             if self.cache_hits == 2 {
                 return Some(prev);
             }
