@@ -115,7 +115,7 @@ pub fn test_example(day: u8, part: Part, example: usize, expected: String) -> Re
 
 #[macro_export]
 macro_rules! days {
-    ($(Day $day:literal { $(example $example:literal { $(part $part:literal expected $expected:literal,)+ })+ })+) => {
+    ($(Day $day:literal { $(example $example:literal { $(part $part:literal expected $expected:literal,)+ })+ $(bench { sample size $bench_sample_size:literal })? })+) => {
         paste::paste! {
             $(
                 mod [< day $day >];
@@ -206,10 +206,16 @@ macro_rules! days {
             ) -> anyhow::Result<()> {
                 match day {
                     $(
-                        $day => super::bench_day_generic::< [< day $day >] :: [< Day $day >] >(input, group),
+                        $day => {
+                            $(
+                                group.sample_size( $bench_sample_size );
+                            )?
+                            super::bench_day_generic::< [< day $day >] :: [< Day $day >] >(input, group)?;
+                        },
                     )+
                     _ => return Err(anyhow::anyhow!(format!("Day {day} is not implemented"))),
                 }
+                Ok(())
             }
         }
     };

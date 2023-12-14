@@ -1,5 +1,3 @@
-// GENERATED! DO NOT CHANGE!
-
 crate::days! {
     Day 01 {
         example 1 {
@@ -90,6 +88,9 @@ crate::days! {
         example 6 {
             part 2 expected "10",
         }
+        bench {
+            sample size 60
+        }
     }
 
     Day 11 {
@@ -116,6 +117,9 @@ crate::days! {
         example 1 {
             part 1 expected "136",
             part 2 expected "64",
+        }
+        bench {
+            sample size 40
         }
     }
 }

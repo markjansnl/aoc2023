@@ -1,5 +1,3 @@
-// GENERATED! DO NOT CHANGE!
-
 pub type Inputs = [&'static str; 4];
 pub const INPUTS: Inputs = [
     include_str!("input.txt"),
