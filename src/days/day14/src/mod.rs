@@ -101,7 +101,70 @@ impl From<&<Day14 as Day>::Parsed> for Platform {
     }
 }
 
+macro_rules! tilt {
+    ($method:ident $c1:ident $c2:ident $sort:tt $($reset:tt)?) => {
+        #[inline]
+        pub fn $method(&mut self) {
+            self.rocks.sort_by(|a, b| {
+                a.$c1.cmp(&b.$c1).then_with(|| {
+                    #[allow(unused_mut)]
+                    let mut cmp = a.$c2.cmp(&b.$c2);
+                    reverse!($sort cmp);
+                    cmp
+                })
+            });
+
+            let mut last_rock = Rock::default();
+            for rock in self.rocks.iter_mut() {
+                if rock.$c1 != last_rock.$c1 {
+                    last_rock.$c1 = rock.$c1;
+                    last_rock.$c2 = reset!($sort self $($reset)?);
+                }
+                match rock.shape {
+                    RockShape::Square => {
+                        last_rock.$c2 = rock.$c2;
+                    }
+                    RockShape::Round => {
+                        next!($sort last_rock $c2);
+                        rock.$c2 = last_rock.$c2;
+                    }
+                }
+            }
+        }
+    };
+}
+
+macro_rules! reverse {
+    (ascending $x:ident) => {
+        $x = $x.reverse();
+    };
+    (descending $x:ident) => {};
+}
+
+macro_rules! reset {
+    (ascending $self:ident $reset:tt) => {
+        $self.$reset + 1
+    };
+    (descending $self:ident) => {
+        0
+    };
+}
+
+macro_rules! next {
+    (ascending $last_rock:ident $c:ident) => {
+        $last_rock.$c -= 1;
+    };
+    (descending $last_rock:ident $c:ident) => {
+        $last_rock.$c += 1;
+    };
+}
+
 impl Platform {
+    tilt!(tilt_north x y ascending height );
+    tilt!(tilt_south x y descending );
+    tilt!(tilt_east y x ascending width );
+    tilt!(tilt_west y x descending );
+
     pub fn cycle(&mut self, i: usize) -> Option<usize> {
         self.tilt_north();
         self.tilt_west();
@@ -118,98 +181,6 @@ impl Platform {
             self.cache.insert(self.rocks.clone(), i);
         }
         None
-    }
-
-    #[inline]
-    pub fn tilt_north(&mut self) {
-        self.rocks
-            .sort_by(|a, b| a.x.cmp(&b.x).then_with(|| a.y.cmp(&b.y).reverse()));
-
-        let mut last_rock = Rock::default();
-        for rock in self.rocks.iter_mut() {
-            if rock.x != last_rock.x {
-                last_rock.x = rock.x;
-                last_rock.y = self.height + 1;
-            }
-            match rock.shape {
-                RockShape::Square => {
-                    last_rock.y = rock.y;
-                }
-                RockShape::Round => {
-                    last_rock.y -= 1;
-                    rock.y = last_rock.y;
-                }
-            }
-        }
-    }
-
-    #[inline]
-    pub fn tilt_south(&mut self) {
-        self.rocks
-            .sort_by(|a, b| a.x.cmp(&b.x).then_with(|| a.y.cmp(&b.y)));
-
-        let mut last_rock = Rock::default();
-        for rock in self.rocks.iter_mut() {
-            if rock.x != last_rock.x {
-                last_rock.x = rock.x;
-                last_rock.y = 0;
-            }
-            match rock.shape {
-                RockShape::Square => {
-                    last_rock.y = rock.y;
-                }
-                RockShape::Round => {
-                    last_rock.y += 1;
-                    rock.y = last_rock.y;
-                }
-            }
-        }
-    }
-
-    #[inline]
-    pub fn tilt_east(&mut self) {
-        self.rocks
-            .sort_by(|a, b| a.y.cmp(&b.y).then_with(|| a.x.cmp(&b.x).reverse()));
-
-        let mut last_rock = Rock::default();
-        for rock in self.rocks.iter_mut() {
-            if rock.y != last_rock.y {
-                last_rock.y = rock.y;
-                last_rock.x = self.width + 1;
-            }
-            match rock.shape {
-                RockShape::Square => {
-                    last_rock.x = rock.x;
-                }
-                RockShape::Round => {
-                    last_rock.x -= 1;
-                    rock.x = last_rock.x;
-                }
-            }
-        }
-    }
-
-    #[inline]
-    pub fn tilt_west(&mut self) {
-        self.rocks
-            .sort_by(|a, b| a.y.cmp(&b.y).then_with(|| a.x.cmp(&b.x)));
-
-        let mut last_rock = Rock::default();
-        for rock in self.rocks.iter_mut() {
-            if rock.y != last_rock.y {
-                last_rock.x = 0;
-                last_rock.y = rock.y;
-            }
-            match rock.shape {
-                RockShape::Square => {
-                    last_rock.x = rock.x;
-                }
-                RockShape::Round => {
-                    last_rock.x += 1;
-                    rock.x = last_rock.x;
-                }
-            }
-        }
     }
 
     pub fn total_load(&self) -> <Day14 as Day>::Output {
