@@ -34,8 +34,8 @@ impl Day for Day14 {
     fn part2(parsed: &Self::Parsed) -> Result<Self::Output> {
         let mut platform = Platform::from(parsed);
         for i in 1..1_000_000_000 {
-            if let Some(prev) = platform.cycle(i) {
-                for j in 0..(1_000_000_000 - i) % (i - prev) {
+            if let Some(cycle_length) = platform.cycle(i) {
+                for j in 0..(1_000_000_000 - i) % cycle_length {
                     platform.cycle(j);
                 }
                 return Ok(platform.total_load());
@@ -172,7 +172,7 @@ impl Platform {
             self.cache.clear();
             self.cache_hits += 1;
             if self.cache_hits == 2 {
-                return Some(prev);
+                return Some(i - prev);
             }
         } else {
             self.cache.insert(self.rocks.clone(), i);
