@@ -11,7 +11,7 @@ Configuration is done in [days.rs](src/days.rs). Macros will make the day implem
 
 Have fun looking at the source code and/or give it a try with your own input. I had a lot of fun implementing this and I'm proud of the result.
 
-With kind regards,
+With kind regards,<br>
 Mark Jans
 
 ## Command Line Interface
