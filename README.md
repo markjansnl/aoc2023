@@ -1,4 +1,4 @@
-### Advent of Code 2023
+# Advent of Code 2023
 
 In this repository you can find the source code of my solutions of the Advent of Code 2023 puzzles.
 
