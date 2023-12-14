@@ -70,7 +70,7 @@ pub struct Platform {
 impl From<&<Day14 as Day>::Parsed> for Platform {
     fn from(parsed: &<Day14 as Day>::Parsed) -> Self {
         let width = parsed[0].len() as u8;
-        let height = parsed[1].len() as u8;
+        let height = parsed.len() as u8;
         let mut rocks = Vec::new();
 
         for (y, line) in parsed.iter().enumerate() {
