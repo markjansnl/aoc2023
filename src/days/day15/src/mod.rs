@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use nom::{
     branch::alt,
     bytes::complete::tag,
@@ -46,28 +44,23 @@ impl Day for Day15 {
     }
 
     fn part2(parsed: &Self::Parsed) -> Result<Self::Output> {
-        let mut hashmap: HashMap<usize, Vec<(&str, u8)>> = HashMap::with_capacity(256);
+        let mut hashmap: Vec<Vec<(&str, u8)>> = Vec::with_capacity(256);
+        hashmap.resize(256, Vec::new());
         for (label, operator, focal_length) in parsed.iter() {
+            let boxx = hashmap.get_mut(hash(label.as_bytes())).unwrap();
             match operator {
                 '-' => {
-                    hashmap.entry(hash(label.as_bytes())).and_modify(|boxx| {
-                        boxx.retain(|(box_label, _)| box_label != label);
-                    });
+                    boxx.retain(|(box_label, _)| box_label != label);
                 }
                 '=' => {
                     let focal_length = focal_length.unwrap();
-                    hashmap
-                        .entry(hash(label.as_bytes()))
-                        .and_modify(|boxx| {
-                            if let Some((_, box_focal_length)) =
-                                boxx.iter_mut().find(|(box_label, _)| box_label == label)
-                            {
-                                *box_focal_length = focal_length;
-                            } else {
-                                boxx.push((*label, focal_length));
-                            }
-                        })
-                        .or_insert(vec![(*label, focal_length)]);
+                    if let Some((_, box_focal_length)) =
+                        boxx.iter_mut().find(|(box_label, _)| box_label == label)
+                    {
+                        *box_focal_length = focal_length;
+                    } else {
+                        boxx.push((*label, focal_length));
+                    }
                 }
                 _ => unreachable!(),
             }
@@ -75,11 +68,12 @@ impl Day for Day15 {
 
         Ok(hashmap
             .iter()
+            .enumerate()
             .flat_map(|(box_number, boxx)| {
                 boxx.iter()
                     .enumerate()
-                    .map(|(slot_number, (_, focal_length))| {
-                        (*box_number + 1) * (slot_number + 1) * *focal_length as usize
+                    .map(move |(slot_number, (_, focal_length))| {
+                        (box_number + 1) * (slot_number + 1) * *focal_length as usize
                     })
             })
             .sum())
