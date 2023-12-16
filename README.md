@@ -14,6 +14,17 @@ Have fun looking at the source code and/or give it a try with your own input. I 
 With kind regards,<br>
 Mark Jans
 
+## Input Files
+
+Since this year sadly I cannot include my puzzle input anymore to make each solution easily
+runnable as per Advent of Code
+[FAQ](https://adventofcode.com/about#faq_copying):
+
+> If you're posting a code repository somewhere, please don't include parts of
+> Advent of Code like the puzzle text or your inputs.
+
+Because I include the puzzle inputs with `include_str`, the repo won't compile until the `input.txt` files per day exits. Use some script to download your own inputs and place them in `src/days/dayXX/inputs/input.txt`. Or create empty files from your terminal using command `for day in src/days/*; do touch $day/inputs/input.txt; done`.
+
 ## Command Line Interface
 
 To run the [aoc2023.rs](src/bin/aoc2023.rs) Command Line Interface, run `cargo run [--release] [-- <PARAMETERS>]`. The following `<PARAMETERS>` are accepted:
