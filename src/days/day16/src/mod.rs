@@ -109,19 +109,19 @@ impl Contraption {
                     visited.insert(location);
                 }
 
-                location = match c {
+                let next = match c {
                     '-' => match location.direction {
                         Up | Direction::Down => {
                             locations.push(location.turn(Left).go());
-                            location.turn(Right).go()
+                            location.turn(Right)
                         }
-                        Left | Right => location.go(),
+                        Left | Right => location,
                     },
                     '|' => match location.direction {
-                        Up | Down => location.go(),
+                        Up | Down => location,
                         Left | Right => {
                             locations.push(location.turn(Up).go());
-                            location.turn(Down).go()
+                            location.turn(Down)
                         }
                     },
                     '\\' => match location.direction {
@@ -129,18 +129,18 @@ impl Contraption {
                         Down => location.turn(Right),
                         Left => location.turn(Up),
                         Right => location.turn(Down),
-                    }
-                    .go(),
+                    },
                     '/' => match location.direction {
                         Up => location.turn(Right),
                         Down => location.turn(Left),
                         Left => location.turn(Down),
                         Right => location.turn(Up),
-                    }
-                    .go(),
-                    '.' => location.go(),
+                    },
+                    '.' => location,
                     _ => unreachable!(),
-                }
+                };
+
+                location = next.go();
             }
         }
 
