@@ -16,7 +16,7 @@ Mark Jans
 
 ## Input Files
 
-Since this year sadly I cannot include my puzzle input anymore to make each solution easily
+Since this year I sadly cannot include my puzzle input anymore to make each solution easily
 runnable as per Advent of Code
 [FAQ](https://adventofcode.com/about#faq_copying):
 
