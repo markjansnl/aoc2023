@@ -20,7 +20,7 @@ impl Day for DayXX {
         todo!()
     }
 
-    fn part2(parsed: &Self::Parsed) -> Result<Self::Output> {
+    fn part2(_parsed: &Self::Parsed) -> Result<Self::Output> {
         todo!()
     }
 }
