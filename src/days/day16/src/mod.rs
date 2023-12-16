@@ -124,18 +124,18 @@ impl Contraption {
                             location.turn(Down)
                         }
                     },
-                    '\\' => match location.direction {
-                        Up => location.turn(Left),
-                        Down => location.turn(Right),
-                        Left => location.turn(Up),
-                        Right => location.turn(Down),
-                    },
-                    '/' => match location.direction {
-                        Up => location.turn(Right),
-                        Down => location.turn(Left),
-                        Left => location.turn(Down),
-                        Right => location.turn(Up),
-                    },
+                    '\\' => location.turn(match location.direction {
+                        Up => Left,
+                        Down => Right,
+                        Left => Up,
+                        Right => Down,
+                    }),
+                    '/' => location.turn(match location.direction {
+                        Up => Right,
+                        Down => Left,
+                        Left => Down,
+                        Right => Up,
+                    }),
                     '.' => location,
                     _ => unreachable!(),
                 };
