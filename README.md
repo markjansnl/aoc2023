@@ -23,7 +23,8 @@ runnable as per Advent of Code
 > If you're posting a code repository somewhere, please don't include parts of
 > Advent of Code like the puzzle text or your inputs.
 
-Because I include the puzzle inputs with `include_str!("input.txt")`, the repo won't compile until the input files exits for all days. Use some script to download your own inputs and place them in `src/days/dayXX/inputs/input.txt`. Or create empty files from your terminal using command `for day in src/days/*; do touch $day/inputs/input.txt; done`.
+Because I include the puzzle inputs with `include_str!("input.txt")`, the repo won't compile until the input files exits for all days. Use some script to download your own inputs and place them in `src/days/dayXX/inputs/input.txt`. Or create empty files from your terminal using command: <br>
+`for day in src/days/*; do touch $day/inputs/input.txt; done`.
 
 ## Command Line Interface
 
