@@ -135,5 +135,8 @@ crate::days! {
             part 1 expected "46",
             part 2 expected "51",
         }
+        bench {
+            sample size 30
+        }
     }
 }

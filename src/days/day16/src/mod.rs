@@ -10,6 +10,8 @@ use nom::{
 use super::inputs::{Inputs, INPUTS};
 use crate::prelude::*;
 
+use Direction::*;
+
 pub struct Day16;
 impl Day for Day16 {
     const INPUTS: Self::Inputs = INPUTS;
@@ -47,8 +49,8 @@ pub struct Contraption(Vec<Vec<char>>);
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
 struct Location {
-    x: isize,
-    y: isize,
+    x: usize,
+    y: usize,
     direction: Direction,
 }
 
@@ -61,16 +63,31 @@ enum Direction {
 }
 
 impl Location {
-    pub fn new(x: isize, y: isize, direction: Direction) -> Self {
+    fn new(x: usize, y: usize, direction: Direction) -> Self {
         Self { x, y, direction }
+    }
+
+    fn go(mut self) -> Self {
+        match self.direction {
+            Up => self.y -= 1,
+            Down => self.y += 1,
+            Left => self.x -= 1,
+            Right => self.x += 1,
+        }
+        self
+    }
+
+    fn turn(mut self, direction: Direction) -> Self {
+        self.direction = direction;
+        self
     }
 }
 
 impl Contraption {
     fn borders(&self) -> Vec<Location> {
-        let size = self.0.len() as isize;
-        let mut borders = Vec::with_capacity(4 * (size as usize - 1));
-        
+        let size = self.0.len();
+        let mut borders = Vec::with_capacity(4 * (size - 1));
+
         for i in 1..size {
             borders.push(Location::new(i, 1, Direction::Down));
             borders.push(Location::new(i, size, Direction::Up));
@@ -82,63 +99,46 @@ impl Contraption {
     }
 
     fn energized(&self, start: Location) -> <Day16 as Day>::Output {
-        let mut beams = vec![start];
+        let mut locations = vec![start];
         let mut visited = HashSet::new();
-        while let Some(mut beam) = beams.pop() {
-            while let Some(c) = self.get(beam.x, beam.y) {
-                if visited.contains(&beam) {
+        while let Some(mut location) = locations.pop() {
+            while let Some(c) = self.get(location.x, location.y) {
+                if visited.contains(&location) {
                     break;
                 } else {
-                    visited.insert(beam);
+                    visited.insert(location);
                 }
 
-                match c {
-                    '-' => match beam.direction {
-                        Direction::Up | Direction::Down => {
-                            beams.push(Location::new(beam.x - 1, beam.y, Direction::Left));
-                            beam = Location::new(beam.x + 1, beam.y, Direction::Right);
+                location = match c {
+                    '-' => match location.direction {
+                        Up | Direction::Down => {
+                            locations.push(location.turn(Left).go());
+                            location.turn(Right).go()
                         }
-                        Direction::Left => {
-                            beam.x -= 1;
-                        }
-                        Direction::Right => {
-                            beam.x += 1;
+                        Left | Right => location.go(),
+                    },
+                    '|' => match location.direction {
+                        Up | Down => location.go(),
+                        Left | Right => {
+                            locations.push(location.turn(Up).go());
+                            location.turn(Down).go()
                         }
                     },
-                    '|' => match beam.direction {
-                        Direction::Up => {
-                            beam.y -= 1;
-                        }
-                        Direction::Down => {
-                            beam.y += 1;
-                        }
-                        Direction::Left | Direction::Right => {
-                            beams.push(Location::new(beam.x, beam.y - 1, Direction::Up));
-                            beam = Location::new(beam.x, beam.y + 1, Direction::Down);
-                        }
-                    },
-                    '\\' => {
-                        beam = match beam.direction {
-                            Direction::Up => Location::new(beam.x - 1, beam.y, Direction::Left),
-                            Direction::Down => Location::new(beam.x + 1, beam.y, Direction::Right),
-                            Direction::Left => Location::new(beam.x, beam.y - 1, Direction::Up),
-                            Direction::Right => Location::new(beam.x, beam.y + 1, Direction::Down),
-                        }
+                    '\\' => match location.direction {
+                        Up => location.turn(Left),
+                        Down => location.turn(Right),
+                        Left => location.turn(Up),
+                        Right => location.turn(Down),
                     }
-                    '/' => {
-                        beam = match beam.direction {
-                            Direction::Up => Location::new(beam.x + 1, beam.y, Direction::Right),
-                            Direction::Down => Location::new(beam.x - 1, beam.y, Direction::Left),
-                            Direction::Left => Location::new(beam.x, beam.y + 1, Direction::Down),
-                            Direction::Right => Location::new(beam.x, beam.y - 1, Direction::Up),
-                        }
+                    .go(),
+                    '/' => match location.direction {
+                        Up => location.turn(Right),
+                        Down => location.turn(Left),
+                        Left => location.turn(Down),
+                        Right => location.turn(Up),
                     }
-                    '.' => match beam.direction {
-                        Direction::Up => beam.y -= 1,
-                        Direction::Down => beam.y += 1,
-                        Direction::Left => beam.x -= 1,
-                        Direction::Right => beam.x += 1,
-                    },
+                    .go(),
+                    '.' => location.go(),
                     _ => unreachable!(),
                 }
             }
@@ -151,14 +151,11 @@ impl Contraption {
             .len()
     }
 
-    fn get(&self, x: isize, y: isize) -> Option<char> {
-        if x < 1 || y < 1 {
+    fn get(&self, x: usize, y: usize) -> Option<char> {
+        if x == 0 || y == 0 {
             None
         } else {
-            self.0
-                .get(y as usize - 1)
-                .map(|line| line.get(x as usize - 1).copied())
-                .flatten()
+            self.0.get(y - 1).and_then(|line| line.get(x - 1).copied())
         }
     }
 }
