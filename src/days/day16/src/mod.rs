@@ -31,7 +31,7 @@ impl Day for Day16 {
         Ok(parsed.energized(Location {
             x: 1,
             y: 1,
-            direction: Direction::Right,
+            direction: Right,
         }))
     }
 
@@ -89,10 +89,10 @@ impl Contraption {
         let mut borders = Vec::with_capacity(4 * (size - 1));
 
         for i in 1..size {
-            borders.push(Location::new(i, 1, Direction::Down));
-            borders.push(Location::new(i, size, Direction::Up));
-            borders.push(Location::new(0, i, Direction::Right));
-            borders.push(Location::new(size, i, Direction::Left));
+            borders.push(Location::new(i, 1, Down));
+            borders.push(Location::new(i, size, Up));
+            borders.push(Location::new(1, i, Right));
+            borders.push(Location::new(size, i, Left));
         }
 
         borders
@@ -111,7 +111,7 @@ impl Contraption {
 
                 let next = match c {
                     '-' => match location.direction {
-                        Up | Direction::Down => {
+                        Up | Down => {
                             locations.push(location.turn(Left).go());
                             location.turn(Right)
                         }
