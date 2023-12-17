@@ -94,12 +94,13 @@ impl HeatMap {
             .flat_map(|direction| {
                 let mut position = *position;
                 position.direction = Some(direction);
-                match direction {
-                    Up => self.get_range(&position, 0, -1, min, max),
-                    Down => self.get_range(&position, 0, 1, min, max),
-                    Left => self.get_range(&position, -1, 0, min, max),
-                    Right => self.get_range(&position, 1, 0, min, max),
-                }
+                let (dx, dy) = match direction {
+                    Up => (0, -1),
+                    Down => (0, 1),
+                    Left => (-1, 0),
+                    Right => (1, 0),
+                };
+                self.get_range(position, dx, dy, min, max)
             })
             .collect()
     }
@@ -114,13 +115,12 @@ impl HeatMap {
 
     fn get_range(
         &self,
-        position: &Position,
+        mut position: Position,
         dx: isize,
         dy: isize,
         min: usize,
         max: usize,
     ) -> Vec<(Position, usize)> {
-        let mut position = *position;
         let mut range = Vec::new();
         let mut heat_loss = 0;
         for i in 1..=max {
