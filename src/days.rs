@@ -153,7 +153,10 @@ crate::days! {
     Day 18 {
         example 1 {
             part 1 expected "62",
-            // part 2 expected "145",
+            part 2 expected "952408144115",
+        }
+        bench {
+            sample size 10
         }
     }
 }
