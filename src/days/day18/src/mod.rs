@@ -41,8 +41,11 @@ impl Day for Day18 {
 impl Day18 {
     fn cubic_meters(parsed: &<Self as Day>::Parsed) -> Result<<Self as Day>::Output> {
         let (horizontal_trench_map, vertical_trench_map) = Self::trench_maps(parsed);
-        let horizontal_corners = vertical_trench_map.keys();
-        let vertical_corners = horizontal_trench_map.keys();
+        let mut horizontal_corners = vertical_trench_map.keys();
+        let mut vertical_corners = horizontal_trench_map.keys();
+
+        horizontal_corners.sort();
+        vertical_corners.sort();
 
         let mut areas = HashMap::new();
         let mut horizontal_edges = HashMap::new();
@@ -77,34 +80,26 @@ impl Day18 {
         let mut did_remove = true;
         while did_remove {
             did_remove = false;
-            for y in 0..=vertical_corners.len() {
-                for x in 0..=horizontal_corners.len() {
-                    let position = Position {
-                        x: x as isize + 1,
-                        y: y as isize + 1,
-                    };
-                    if let Some(edge) = horizontal_edges.get(&position).copied() {
-                        let up = position.next(Up, 1);
-                        if !edge.trench
-                            && (areas.get(&position).is_none() || areas.get(&up).is_none())
-                        {
-                            horizontal_edges.remove(&position);
-                            areas.remove(&position);
-                            areas.remove(&up);
-                            did_remove = true;
-                        }
-                    }
-                    if let Some(edge) = vertical_edges.get(&position).copied() {
-                        let left = position.next(Left, 1);
-                        if !edge.trench
-                            && (areas.get(&position).is_none() || areas.get(&left).is_none())
-                        {
-                            vertical_edges.remove(&position);
-                            areas.remove(&position);
-                            areas.remove(&left);
-                            did_remove = true;
-                        }
-                    }
+
+            for position in horizontal_edges.keys().copied().collect::<Vec<_>>() {
+                let edge = horizontal_edges.get(&position).copied().unwrap();
+                let up = position.next(Up, 1);
+                if !edge.trench && (areas.get(&position).is_none() || areas.get(&up).is_none()) {
+                    horizontal_edges.remove(&position);
+                    areas.remove(&position);
+                    areas.remove(&up);
+                    did_remove = true;
+                }
+            }
+
+            for position in vertical_edges.keys().copied().collect::<Vec<_>>() {
+                let edge = vertical_edges.get(&position).copied().unwrap();
+                let left = position.next(Left, 1);
+                if !edge.trench && (areas.get(&position).is_none() || areas.get(&left).is_none()) {
+                    vertical_edges.remove(&position);
+                    areas.remove(&position);
+                    areas.remove(&left);
+                    did_remove = true;
                 }
             }
         }
@@ -186,7 +181,6 @@ struct Range {
     start: isize,
     end: isize,
 }
-
 
 #[derive(Debug, Clone, Copy)]
 struct Area {
@@ -316,8 +310,9 @@ impl Parser {
     }
 
     fn distance_hex(s: &str) -> IResult<isize> {
-        map_res(take_while_m_n(5, 5, |c: char| c.is_ascii_hexdigit()), |hex_str| {
-            isize::from_str_radix(hex_str, 16)
-        })(s)
+        map_res(
+            take_while_m_n(5, 5, |c: char| c.is_ascii_hexdigit()),
+            |hex_str| isize::from_str_radix(hex_str, 16),
+        )(s)
     }
 }
