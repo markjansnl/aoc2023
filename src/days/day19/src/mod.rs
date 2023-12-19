@@ -192,6 +192,7 @@ impl Condition {
             Operator::GreaterThan => part_rating[self.category] > self.value,
         }
     }
+
     fn possibilities_accepted(
         &self,
         system: &System,
