@@ -3,7 +3,6 @@ use std::{
     ops::{Index, IndexMut},
 };
 
-
 use nom::{
     branch::alt,
     bytes::complete::tag,
@@ -26,7 +25,7 @@ impl Day for Day19 {
     fn reuse_parsed() -> bool {
         true
     }
-  
+
     fn parse(input: &'static str, _part: Part) -> Result<Self::Parsed> {
         Ok(Parser::input(input)?.1)
     }
