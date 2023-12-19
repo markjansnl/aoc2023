@@ -159,4 +159,10 @@ crate::days! {
             sample size 10
         }
     }
+
+    Day 19 {
+        example 1 {
+            part 1 expected "19114",
+        }
+    }
 }
