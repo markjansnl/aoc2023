@@ -26,7 +26,7 @@ impl Day for Day19 {
     fn reuse_parsed() -> bool {
         true
     }
-  
+
     fn parse(input: &'static str, _part: Part) -> Result<Self::Parsed> {
         Ok(Parser::input(input)?.1)
     }
