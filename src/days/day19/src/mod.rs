@@ -1,4 +1,7 @@
-use std::{collections::HashMap, ops::Index};
+use std::{
+    collections::HashMap,
+    ops::{Index, IndexMut},
+};
 
 use nom::{
     branch::alt,
@@ -32,8 +35,9 @@ impl Day for Day19 {
         system.sum(part_ratings)
     }
 
-    fn part2(_parsed: &Self::Parsed) -> Result<Self::Output> {
-        todo!()
+    fn part2(parsed: &Self::Parsed) -> Result<Self::Output> {
+        let (system, _) = parsed;
+        system.possibilities_accepted("in", &mut PartRatingRange::default())
     }
 }
 
@@ -49,9 +53,9 @@ pub type Value = usize;
 
 pub struct System(HashMap<Label, Workflow>);
 
-pub struct Workflow(Vec<Rule>);
-
 pub type Label = &'static str;
+
+pub struct Workflow(Vec<Rule>);
 
 pub enum Rule {
     Condition(Condition),
@@ -104,17 +108,49 @@ impl System {
     fn process(&self, part_rating: PartRating) -> Result<Decision> {
         let mut workflow = "in";
         loop {
-            match self.0.get(workflow).context(format!("Workflow {workflow} not found"))?.process(part_rating)? {
+            match self
+                .0
+                .get(workflow)
+                .context(format!("Workflow {workflow} not found"))?
+                .process(part_rating)?
+            {
                 Destination::Decision(decision) => return Ok(decision),
                 Destination::Workflow(next) => workflow = next,
             }
         }
     }
+
+    fn possibilities_accepted(
+        &self,
+        workflow: Label,
+        part_rating_range: &mut PartRatingRange,
+    ) -> Result<Value> {
+        self.0
+            .get(workflow)
+            .context(format!("Workflow {workflow} not found"))?
+            .possibilities_accepted(self, part_rating_range)
+    }
 }
 
 impl Workflow {
     fn process(&self, part_rating: PartRating) -> Result<Destination> {
-        Ok(self.0.iter().find(|rule| rule.matches(part_rating)).context("None of the rules matches")?.destination())
+        Ok(self
+            .0
+            .iter()
+            .find(|rule| rule.matches(part_rating))
+            .context("None of the rules matches")?
+            .destination())
+    }
+
+    fn possibilities_accepted(
+        &self,
+        system: &System,
+        part_rating_range: &mut PartRatingRange,
+    ) -> Result<Value> {
+        self.0
+            .iter()
+            .map(|rule| rule.possibilities_accepted(system, part_rating_range))
+            .sum::<Result<Value>>()
     }
 }
 
@@ -132,6 +168,21 @@ impl Rule {
             Rule::Destination(destination) => *destination,
         }
     }
+
+    fn possibilities_accepted(
+        &self,
+        system: &System,
+        part_rating_range: &mut PartRatingRange,
+    ) -> Result<Value> {
+        match self {
+            Rule::Condition(condition) => {
+                condition.possibilities_accepted(system, part_rating_range)
+            }
+            Rule::Destination(destination) => {
+                destination.possibilities_accepted(system, part_rating_range)
+            }
+        }
+    }
 }
 
 impl Condition {
@@ -139,6 +190,49 @@ impl Condition {
         match self.operator {
             Operator::LessThan => part_rating[self.category] < self.value,
             Operator::GreaterThan => part_rating[self.category] > self.value,
+        }
+    }
+    fn possibilities_accepted(
+        &self,
+        system: &System,
+        part_rating_range: &mut PartRatingRange,
+    ) -> Result<Value> {
+        self.destination.possibilities_accepted(
+            system,
+            &mut match self.operator {
+                Operator::LessThan => {
+                    part_rating_range.possibilities(self.category, 1, self.value - 1)
+                }
+                Operator::GreaterThan => {
+                    part_rating_range.possibilities(self.category, self.value + 1, 4000)
+                }
+            },
+        )
+    }
+}
+
+impl Destination {
+    fn possibilities_accepted(
+        &self,
+        system: &System,
+        part_rating_range: &mut PartRatingRange,
+    ) -> Result<Value> {
+        match *self {
+            Destination::Decision(decision) => {
+                Ok(decision.possibilities_accepted(part_rating_range))
+            }
+            Destination::Workflow(workflow) => {
+                system.possibilities_accepted(workflow, part_rating_range)
+            }
+        }
+    }
+}
+
+impl Decision {
+    fn possibilities_accepted(&self, part_rating_range: &PartRatingRange) -> Value {
+        match *self {
+            Decision::Accepted => part_rating_range.possibilities_accepted(),
+            Decision::Rejected => 0,
         }
     }
 }
@@ -159,6 +253,117 @@ impl Index<Category> for PartRating {
 impl PartRating {
     fn sum(&self) -> Value {
         self.x + self.m + self.a + self.s
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Range(Vec<SubRange>);
+
+#[derive(Debug, Clone, Copy)]
+struct SubRange {
+    start: usize,
+    end: usize,
+}
+
+#[derive(Debug, Default, Clone)]
+struct PartRatingRange {
+    x: Range,
+    m: Range,
+    a: Range,
+    s: Range,
+}
+
+impl Default for Range {
+    fn default() -> Self {
+        Self(vec![SubRange {
+            start: 1,
+            end: 4000,
+        }])
+    }
+}
+
+impl Range {
+    fn possibilities(&mut self, start: usize, end: usize) -> usize {
+        let mut possibilities = 0;
+        self.0 = self
+            .0
+            .iter()
+            .copied()
+            .fold(Vec::new(), |mut sub_ranges, mut sub_range| {
+                if sub_range.contains(start) {
+                    possibilities += end.min(sub_range.end) - start + 1;
+                    if sub_range.contains(end) && end < sub_range.end {
+                        sub_ranges.push(SubRange {
+                            start: end + 1,
+                            end: sub_range.end,
+                        });
+                    }
+                    sub_range.end = start - 1;
+                } else if sub_range.contains(end) {
+                    possibilities += end - sub_range.start + 1;
+                    sub_range.start = end + 1;
+                }
+                if sub_range.start <= sub_range.end {
+                    sub_ranges.push(sub_range);
+                }
+                sub_ranges
+            });
+        possibilities
+    }
+
+    fn possibilities_accepted(&self) -> Value {
+        self.0.iter().map(SubRange::possibilities_accepted).sum()
+    }
+}
+
+impl SubRange {
+    fn contains(&self, i: usize) -> bool {
+        self.start <= i && self.end >= i
+    }
+
+    fn possibilities_accepted(&self) -> Value {
+        self.end - self.start + 1
+    }
+}
+
+impl PartRatingRange {
+    fn possibilities(&mut self, category: Category, start: usize, end: usize) -> Self {
+        let mut possibilities = self.clone();
+        self[category].possibilities(start, end);
+        possibilities[category].possibilities(0, start - 1);
+        possibilities[category].possibilities(end + 1, 4001);
+        possibilities
+    }
+
+    fn possibilities_accepted(&self) -> Value {
+        [&self.x, &self.m, &self.a, &self.s]
+            .into_iter()
+            .map(|range| range.possibilities_accepted())
+            .product()
+    }
+}
+
+impl Index<Category> for PartRatingRange {
+    type Output = Range;
+
+    fn index(&self, category: Category) -> &Self::Output {
+        match category {
+            Category::ExtremelyCoolLooking => &self.x,
+            Category::Musical => &self.m,
+            Category::Aerodynamic => &self.a,
+            Category::Shiny => &self.s,
+        }
+    }
+}
+
+impl IndexMut<Category> for PartRatingRange {
+    fn index_mut(&mut self, category: Category) -> &mut Self::Output {
+        match category {
+            Category::ExtremelyCoolLooking => &mut self.x,
+            Category::Musical => &mut self.m,
+            Category::Aerodynamic => &mut self.a,
+            Category::Shiny => &mut self.s,
+        }
     }
 }
 
