@@ -115,7 +115,7 @@ pub fn test_example(day: u8, part: Part, example: usize, expected: String) -> Re
 
 #[macro_export]
 macro_rules! days {
-    ($(Day $day:literal { $(example $example:literal { $(part $part:literal expected $expected:literal,)+ })+ $(bench { sample size $bench_sample_size:literal })? })+) => {
+    ($(Day $day:literal { $(example $example:literal { $(part $part:literal expected $expected:literal,)+ })* $(bench { sample size $bench_sample_size:literal })? })+) => {
         paste::paste! {
             $(
                 mod [< day $day >];
@@ -138,7 +138,7 @@ macro_rules! days {
                                         )+
                                     ],
                                 },
-                            )+
+                            )*
                         ],
                     },
                 )+
@@ -194,7 +194,7 @@ macro_rules! days {
                                     }
                                 )*
                             }
-                        )+
+                        )*
                     }
                 )+
             }

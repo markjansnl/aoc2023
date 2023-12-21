@@ -175,4 +175,6 @@ crate::days! {
             part 1 expected "11687500",
         }
     }
+
+    Day 21 { }
 }
