@@ -177,4 +177,10 @@ crate::days! {
     }
 
     Day 21 { }
+
+    Day 22 {
+        example 1 {
+            part 1 expected "5",
+        }
+    }
 }
