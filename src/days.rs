@@ -183,4 +183,10 @@ crate::days! {
             part 1 expected "5",
         }
     }
+
+    Day 23 {
+        example 1 {
+            part 1 expected "94",
+        }
+    }
 }
