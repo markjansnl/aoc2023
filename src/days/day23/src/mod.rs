@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use nom::{
     branch::alt,
     character::complete::{char, line_ending},
@@ -27,19 +29,22 @@ impl Day for Day23 {
 
     fn part1(parsed: &Self::Parsed) -> Result<Self::Output> {
         parsed
-            .longest_path(Node {
-                tile: Tile { x: 2, y: 1 },
-                direction: Down,
-            })
+            .longest_path(Node::default())
             .context("Longest path not found")
     }
 
-    fn part2(_parsed: &Self::Parsed) -> Result<Self::Output> {
-        todo!()
+    fn part2(parsed: &Self::Parsed) -> Result<Self::Output> {
+        let graph = Graph::from(parsed);
+        graph
+            .longest_path(&GraphNode::default())
+            .context("Longest path not found")
     }
 }
 
 pub struct Map(Vec<Vec<char>>);
+
+#[derive(Debug, Clone)]
+pub struct Graph(HashMap<Tile, HashMap<Tile, usize>>);
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 struct Tile {
@@ -51,6 +56,14 @@ struct Tile {
 struct Node {
     tile: Tile,
     direction: Direction,
+    last: Tile,
+    length: usize,
+}
+
+#[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
+struct GraphNode {
+    tile: Tile,
+    visited: Vec<Tile>,
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
@@ -59,6 +72,23 @@ enum Direction {
     Right,
     Up,
     Down,
+}
+
+impl Default for Tile {
+    fn default() -> Self {
+        Self { x: 2, y: 1 }
+    }
+}
+
+impl Default for Node {
+    fn default() -> Self {
+        Self {
+            tile: Tile::default(),
+            direction: Down,
+            last: Tile::default(),
+            length: 0,
+        }
+    }
 }
 
 impl From<Direction> for char {
@@ -88,7 +118,7 @@ impl Map {
         if node.tile == self.end() {
             return Some(0);
         }
-        self.successors(node)
+        self.successors(node, Part1)
             .into_iter()
             .filter_map(|successor| self.longest_path(successor))
             .max()
@@ -100,24 +130,35 @@ impl Map {
         Node {
             tile: Tile { x, y },
             direction,
+            last,
+            length,
         }: Node,
+        part: Part,
     ) -> Vec<Node> {
         [
             Node {
                 tile: Tile { x: x - 1, y },
                 direction: Left,
+                last,
+                length: length + 1,
             },
             Node {
                 tile: Tile { x: x + 1, y },
                 direction: Right,
+                last,
+                length: length + 1,
             },
             Node {
                 tile: Tile { x, y: y - 1 },
                 direction: Up,
+                last,
+                length: length + 1,
             },
             Node {
                 tile: Tile { x, y: y + 1 },
                 direction: Down,
+                last,
+                length: length + 1,
             },
         ]
         .into_iter()
@@ -129,10 +170,14 @@ impl Map {
                          y: next_y,
                      },
                  direction: next_direction,
+                 ..
              }| {
                 let next_c = self.get(next_x, next_y);
                 next_direction != direction.opposite()
-                    && (next_c == '.' || next_c == next_direction.into())
+                    && match part {
+                        Part1 => next_c == '.' || next_c == next_direction.into(),
+                        Part2 => next_c != '#',
+                    }
             },
         )
         .collect()
@@ -146,11 +191,113 @@ impl Map {
     }
 
     fn get(&self, x: usize, y: usize) -> char {
-        if x == 0 || y == 0 || x > self.0[0].len() || y > self.0.len() {
+        if y == 0 || y > self.0.len() {
             '#'
         } else {
             self.0[y - 1][x - 1]
         }
+    }
+}
+
+impl From<&Map> for Graph {
+    fn from(map: &Map) -> Self {
+        let mut graph = Graph(HashMap::new());
+        let mut queue = vec![Node::default()];
+
+        while let Some(from) = queue.pop() {
+            if graph
+                .0
+                .get(&from.last)
+                .and_then(|successors| successors.get(&from.tile))
+                .is_some()
+                || graph
+                    .0
+                    .get(&from.tile)
+                    .and_then(|successors| successors.get(&from.last))
+                    .is_some()
+            {
+                continue;
+            } else if from.tile == map.end() {
+                graph
+                    .0
+                    .entry(from.last)
+                    .and_modify(|successors| {
+                        successors.insert(from.tile, from.length);
+                    })
+                    .or_insert(HashMap::from([(from.tile, from.length)]));
+            } else {
+                let mut successors = map.successors(from, Part2);
+                if successors.len() > 1 {
+                    graph
+                        .0
+                        .entry(from.last)
+                        .and_modify(|successors| {
+                            successors.insert(from.tile, from.length);
+                        })
+                        .or_insert(HashMap::from([(from.tile, from.length)]));
+                    for successor in successors.iter_mut() {
+                        successor.last = from.tile;
+                        successor.length = 1;
+                    }
+                }
+                queue.append(&mut successors);
+            }
+        }
+
+        for (from, successors) in graph.0.clone().into_iter() {
+            for (to, length) in successors {
+                graph
+                    .0
+                    .entry(to)
+                    .and_modify(|successors| {
+                        successors.insert(from, length);
+                    })
+                    .or_insert(HashMap::from([(from, length)]));
+            }
+        }
+
+        graph
+    }
+}
+
+impl Graph {
+    fn longest_path(&self, node: &GraphNode) -> Option<usize> {
+        if node.tile == self.end() {
+            Some(0)
+        } else {
+            self.successors(node)
+                .into_iter()
+                .filter_map(|(successor, length)| self.longest_path(&successor).map(|n| n + length))
+                .max()
+        }
+    }
+
+    fn successors(&self, node: &GraphNode) -> Vec<(GraphNode, usize)> {
+        let mut successor_visited = node.visited.clone();
+        successor_visited.push(node.tile);
+        self.0
+            .get(&node.tile)
+            .unwrap()
+            .iter()
+            .filter_map(|(successor, length)| {
+                if !node.visited.contains(successor) {
+                    Some((
+                        GraphNode {
+                            tile: *successor,
+                            visited: successor_visited.clone(),
+                        },
+                        *length,
+                    ))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    fn end(&self) -> Tile {
+        let y = self.0.keys().map(|tile| tile.y).max().unwrap();
+        *self.0.keys().find(|tile| tile.y == y).unwrap()
     }
 }
 
@@ -172,21 +319,5 @@ impl Parser {
             char('v'),
             char('<'),
         ))(s)
-    }
-}
-
-#[cfg(test)]
-#[test]
-fn test_heap() {
-    use std::collections::BinaryHeap;
-
-    let mut heap = BinaryHeap::new();
-    heap.push(-4isize);
-    heap.push(-10isize);
-    heap.push(-1isize);
-    heap.push(-6isize);
-
-    while let Some(x) = heap.pop() {
-        println!("{x}");
     }
 }
