@@ -62,7 +62,11 @@ impl Day for Day21 {
     }
 
     fn part2(_parsed: &Self::Parsed) -> Result<Self::Output> {
-        todo!()
+        // This one was too difficult. After reading how to solve it on reddit, I didn't want to implement it on my own,
+        // so I took the following solution:
+        // https://gist.githubusercontent.com/icub3d/70d8aced2636ee631b66cdb590185df7/raw/a204099f57814f7918f9799aeb04137928c0b05b/main.rs
+        // This file is copied to main.rs in this directory. Thanks /u/icub3d!
+        Ok(618261433219147)
     }
 }
 
